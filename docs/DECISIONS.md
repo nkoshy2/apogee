@@ -22,3 +22,21 @@ CSP is `default-src 'self'`. The frontend never uses `innerHTML` with data.
 The server holds an exclusive `msvcrt` lock on `<data>/server.lock` for its lifetime. Windows releases
 the lock if the process dies, so a stale lock file cannot block startup. The launcher first probes
 `/api/health` for the AIMS app id and reuses a running server if it finds one.
+
+## D5: Ranking is computed on read, memoized in memory (2026-10-26)
+Rankings depend on settings and on the posting text, both of which change. Storing them would
+mean invalidation logic and a new table. Instead they are recomputed on each request and memoized
+on their exact inputs (settings JSON plus the posting fields read), so a cached result can never be stale.
+Measured: about 1 ms per posting cold and 0.1 s for 2,000 postings warm. Revisit if lists grow well past that.
+
+## D6: One application per opportunity; any status transition allowed (2026-10-26)
+`applications.opportunity_id` is UNIQUE, which prevents accidental duplicate tracking. Real hiring
+processes skip and repeat steps, so the lifecycle is not enforced as a state machine. Instead,
+every status change is recorded in an append-only history (enforced by triggers). Starting an
+application marks the opportunity as saved. Nothing ever infers that an application was submitted. The
+UI only pre-fills today's date when the user picks "submitted", and the user can change it.
+
+## D7: Discovered postings are read-only except user fields (2026-10-26)
+PATCH accepts title, URL, and other details only for `source = 'manual'`. Discovered postings are kept
+in sync with their source (Phase 4), and local edits would be silently fought by imports.
+`user_state` and `user_notes` are always editable.

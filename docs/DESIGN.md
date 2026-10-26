@@ -43,11 +43,12 @@ One Python package, `aims/`, with one module per responsibility. No business mod
 aims/
   config.py          paths/port (env overrides: AIMS_DATA_DIR, AIMS_PORT)
   db.py              connection, transactions, migration runner          [Done]
-  migrations/*.sql   schema, append-only                                 [Done: 0001]
-  settings_store.py  user preferences (validated, JSON values)            [Done]
-  opportunities.py   storage, normalization, dedup, user state           [Done: manual create/list]
-  ranking.py         eligibility + relevance + preference scoring        [Planned P2]
-  applications.py    tracking + status history                           [Planned P2]
+  migrations/*.sql   schema, append-only                                 [Done: 0001, 0002]
+  settings_store.py  preferences + profile facts (validated, JSON values) [Done]
+  opportunities.py   storage, dedup, search/filter, edit, manual import  [Done]
+  ranking.py         eligibility + relevance + preference scoring        [Done]
+  data/skills.json   skill/discipline vocabulary used by ranking         [Done]
+  applications.py    tracking + append-only status history               [Done]
   experience.py      verified experience + statements                    [Planned P3]
   resume/            selection, LaTeX render, compile, validate          [Planned P3]
   discovery/         adapters (greenhouse, lever), feed writer, importer [Planned P4]
@@ -74,9 +75,15 @@ SQLite, WAL, `foreign_keys=ON`, `synchronous=FULL`. Timestamps are UTC ISO-8601 
   - Constraints: `UNIQUE(source, source_key, source_posting_id)`. Manual rows have a NULL posting id, so manual dedup uses `url_key` (normalized URL) and is enforced in code with a 409 response.
   - `listing_status`: `active` | `not_seen` (absent from a *successful complete* check) | `closed` (user-set). A failed check never changes it.
 
+**0002 (Done)**
+
+- `applications(id, opportunity_id UNIQUE FK RESTRICT, status, submitted_on, deadline, notes, created_at, updated_at)`. One application per opportunity. Status is one of preparing, submitted, assessment, interviewing, offer, rejected, withdrawn. Any transition is allowed.
+- `application_events(id, application_id FK, at, from_status, to_status, note)`. Creation has `from_status` NULL. A note-only event has `from = to`.
+- Triggers enforce the integrity rules: events cannot be updated or deleted, and an application cannot move to a different opportunity. An opportunity with an application cannot be deleted (FK RESTRICT).
+
 **Planned**
 
-- P2: `applications(id, opportunity_id FK RESTRICT, status, submitted_on, deadline, notes, resume_document_id, created_at, updated_at)`, `application_events(id, application_id FK, at, from_status, to_status, note)`. History is append-only.
+- P3: add `applications.resume_document_id`.
 - P3: `education`, `experiences(kind: project|research|employment|achievement, title, org, start, end, ...)`, `skills(name, aliases)`, `experience_skills`, `statements(experience_id FK, text, status draft|verified|approved, protected, tags)`, `resume_documents(id, opportunity_id, template_version, selection_json, tex_sha256, pdf_sha256, page_count, status, created_at)`. Files are stored at `documents/<id>/resume.{tex,pdf}` and are never overwritten. A failed compile writes nothing to the approved document.
 - P4: `sources(id, kind, source_key, employer, enabled)`, `source_checks(id, source_id, feed_run_id, checked_at, status ok|failed, complete, posting_count, error)`, `imported_feed_runs(run_id PK, imported_at)`, `opportunity_snapshots(opportunity_id, fetched_at, content_sha256, raw_json)` (written only when the content hash changes; this is the audit trail).
 - P5: `meta(data_revision)` plus triggers.
@@ -89,10 +96,12 @@ All endpoints are under `/api`. JSON only. Mutations require the header `X-AIMS-
 |---|---|
 | `GET /api/health` (app id, version, schema version, data dir, db check) | Done |
 | `GET/PUT /api/settings` | Done |
-| `GET/POST /api/opportunities`, `GET /api/opportunities/{id}` | Done |
+| `GET /api/opportunities?q=&state=&opportunity_type=&eligibility=&sort=` (ranked list, no descriptions) | Done |
+| `POST /api/opportunities`, `GET /api/opportunities/{id}` (with full ranking explanation) | Done |
+| `PATCH /api/opportunities/{id}`: save/dismiss/notes always; details only for manual entries | Done |
+| `POST /api/opportunities/import` (`{format: csv\|json, content}`, per-row result, never modifies existing) | Done |
+| `GET/POST /api/applications`, `GET/PATCH /api/applications/{id}`, `POST /api/applications/{id}/events` | Done |
 | `POST /api/shutdown` | Done |
-| `PATCH /api/opportunities/{id}` (save/dismiss/notes), search/filter params, `/api/opportunities/{id}/ranking` | P2 |
-| `/api/applications…`, `/api/applications/{id}/events` | P2 |
 | `/api/experience…`, `/api/statements…`, `/api/resumes…` (+ PDF preview/export download) | P3 |
 | `/api/discovery/sources`, `/api/discovery/import`, `/api/discovery/health` | P4 |
 | `/api/backups` (list/create/verify/restore) | P5 |
@@ -121,14 +130,23 @@ GitHub Actions (cron, roughly every 12 h) runs the adapters and commits `feed/v1
 - Manual adapter runs locally produce the same JSON, so there is a single import path.
 - Contents: only public posting data and the company list. Nothing from the local DB is uploaded.
 
-## 7. Ranking (Phase 2)
+## 7. Ranking (Phase 2, Done)
 
-These are pure functions over the opportunity text plus the profile and preferences. Every point carries a reason string.
+`aims/ranking.py` contains pure functions over the title, description, profile, and preferences. Every point carries a reason string, and every eligibility finding quotes the sentence that triggered it.
 
-- **Eligibility:** regex rules (e.g. "U.S. citizen", "ITAR"/"U.S. person", "graduating between", "minimum GPA", class standing) are compared with profile facts. Result is `eligible`, `uncertain` (default when nothing matches), or `ineligible` (only on an explicit, matched disqualifier).
-- **Relevance:** a skill-tag vocabulary with aliases (`config/skills.json`). Score = weighted overlap between tags found in the job and verified-skill tags, plus discipline match.
-- **Preference:** preferred employers, locations, terms, and disciplines from settings.
-- Ineligible and low-score items are sorted lower and labeled. They are never hidden or deleted.
+- **Eligibility.** Per-sentence rules, applied to the title and description:
+  - Rules: U.S. citizenship/clearance, U.S. person (ITAR/export control, "citizen or permanent resident"), no visa sponsorship, minimum GPA, graduation window, degree level.
+  - A sentence containing "preferred / a plus / desired" makes the rule optional, so it never disqualifies. Negations ("not required", "regardless of") are skipped.
+  - `ineligible` only if a mandatory rule is definitely failed. `uncertain` if a mandatory rule cannot be answered from the profile, or if there is no description. Otherwise `eligible`. When no rules are found, the result says so.
+  - Degree mismatch disqualifies only with explicit "only" wording. The wording is too varied for anything else.
+- **Relevance (0–100).** 70 points for skills, 30 for discipline.
+  - Skill score = 70 × (job skill tags you have) / (job skill tags). User skills are mapped onto tags through aliases in `aims/data/skills.json`, and unmapped skills are matched literally.
+  - Phrases are matched as whole token sequences, so "ros" doesn't match inside "across".
+  - When the posting has no recognized tags, skills count as neutral (35).
+- **Preference (0–100).** Employer 40, location 30, term 30.
+- **Overall:** 0.6 × relevance + 0.4 × preference. Lists sort by eligibility group, then by overall score. Ineligible items are labeled and sorted lower, never hidden or deleted.
+- **Performance:** about 1 ms per posting cold (2,000 postings ≈ 2 s). Results are memoized in memory on the exact inputs they read, so repeat views take about 0.1 s.
+- **Interim:** profile skills are typed in Settings for now. Phase 3 adds skills from verified experience records.
 
 ## 8. Resume generation (Phase 3)
 
@@ -187,7 +205,7 @@ Each task leaves the app working and tested.
 7. Server single-instance lock, launcher, shortcut script
 8. Tests: migrations, persistence across restart, security, duplicate URL, lock
 
-**Phase 2: Opportunity management**
+**Phase 2: Opportunity management (Done)**
 1. Search/filter/sort params
 2. Save/dismiss/notes (PATCH)
 3. Compare view (2–4 side by side)

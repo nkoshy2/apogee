@@ -50,6 +50,21 @@ def test_pre_migration_snapshot_taken_for_existing_db(tmp_path):
     snap.close()
 
 
+def test_upgrade_from_v1_keeps_existing_data(tmp_path):
+    """Regression guard for every new migration: data written under 0001 survives."""
+    conn = fresh(tmp_path)
+    all_migrations = db.available_migrations()
+    db.migrate(conn, tmp_path / "b", all_migrations[:1])
+    conn.execute(
+        "INSERT INTO opportunities (source, employer, title, url, url_key, first_seen_at, last_seen_at, "
+        "user_notes, created_at, updated_at) VALUES ('manual', 'E', 'T', 'https://e/1', 'https://e/1', 'n', 'n', 'keep', 'n', 'n')"
+    )
+    db.migrate(conn, tmp_path / "b", all_migrations)
+    assert db.schema_version(conn) == all_migrations[-1][0]
+    assert conn.execute("SELECT user_notes FROM opportunities").fetchone()[0] == "keep"
+    assert len(list((tmp_path / "b" / "pre-migration").glob("*.db"))) == 1
+
+
 def test_refuses_db_newer_than_app(tmp_path):
     conn = fresh(tmp_path)
     conn.execute("PRAGMA user_version = 99")

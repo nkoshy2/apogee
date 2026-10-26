@@ -21,66 +21,165 @@
   <div id="banner" class="banner" hidden></div>
 
   <main>
+    <!-- ================= Opportunities ================= -->
     <section id="tab-opportunities" class="tab">
+      <div class="toolbar">
+        <input id="f-q" type="search" placeholder="Search employer, title, location, keywords" aria-label="Search">
+        <select id="f-state" aria-label="State">
+          <option value="active">New + saved</option>
+          <option value="saved">Saved</option>
+          <option value="new">New</option>
+          <option value="dismissed">Dismissed</option>
+          <option value="all">All</option>
+        </select>
+        <select id="f-type" aria-label="Type">
+          <option value="">Any type</option>
+          <option value="internship">Internship</option>
+          <option value="co-op">Co-op</option>
+          <option value="government">Government program</option>
+          <option value="research">University research</option>
+          <option value="full-time">Full-time</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="f-elig" aria-label="Eligibility">
+          <option value="">Any eligibility</option>
+          <option value="eligible">Eligible</option>
+          <option value="uncertain">Uncertain</option>
+          <option value="ineligible">Ineligible</option>
+        </select>
+        <select id="f-sort" aria-label="Sort">
+          <option value="rank">Sort: best fit</option>
+          <option value="deadline">Sort: deadline</option>
+          <option value="newest">Sort: newest</option>
+          <option value="employer">Sort: employer</option>
+        </select>
+        <button id="compare-btn" class="secondary" disabled>Compare (0)</button>
+        <button id="add-btn" class="secondary">+ Add / import</button>
+      </div>
+
+      <div id="compare" class="panel" hidden></div>
+
       <div class="split">
         <div class="panel">
-          <h2>Opportunities</h2>
           <table id="opp-table">
-            <thead><tr><th>Employer</th><th>Title</th><th>Location</th><th>Type</th><th>Deadline</th><th>Added</th></tr></thead>
+            <thead><tr><th></th><th>Fit</th><th>Employer</th><th>Title</th><th>Location</th><th>Deadline</th><th>Status</th></tr></thead>
             <tbody></tbody>
           </table>
-          <p id="opp-empty" class="muted" hidden>No opportunities yet. Add one using the form.</p>
-          <div id="opp-detail" class="detail" hidden></div>
+          <p id="opp-count" class="muted"></p>
         </div>
-        <form id="opp-form" class="panel">
-          <h2>Add manually</h2>
-          <label>Employer <input name="employer" required maxlength="200"></label>
-          <label>Title <input name="title" required maxlength="300"></label>
-          <label>Official posting URL <input name="url" type="url" required maxlength="2000" placeholder="https://"></label>
-          <label>Location <input name="location" maxlength="300"></label>
-          <label>Type
-            <select name="opportunity_type">
-              <option value="internship">Internship</option>
-              <option value="co-op">Co-op</option>
-              <option value="government">Government program</option>
-              <option value="research">University research</option>
-              <option value="full-time">Full-time</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label>Deadline <input name="deadline" type="date"></label>
-          <label>Description <textarea name="description" rows="6"></textarea></label>
-          <label>Notes <textarea name="user_notes" rows="3"></textarea></label>
-          <button type="submit">Add opportunity</button>
-        </form>
+        <div class="side">
+          <div id="opp-detail" class="panel" hidden></div>
+
+          <form id="opp-form" class="panel" hidden>
+            <h2 id="opp-form-title">Add opportunity</h2>
+            <input type="hidden" name="id">
+            <label>Employer <input name="employer" required maxlength="200"></label>
+            <label>Title <input name="title" required maxlength="300"></label>
+            <label>Official posting URL <input name="url" type="url" required maxlength="2000" placeholder="https://"></label>
+            <label>Location <input name="location" maxlength="300"></label>
+            <label>Type
+              <select name="opportunity_type">
+                <option value="internship">Internship</option>
+                <option value="co-op">Co-op</option>
+                <option value="government">Government program</option>
+                <option value="research">University research</option>
+                <option value="full-time">Full-time</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>Deadline <input name="deadline" type="date"></label>
+            <label>Description <textarea name="description" rows="6"></textarea></label>
+            <label data-create-only>Notes <textarea name="user_notes" rows="3"></textarea></label>
+            <div class="row">
+              <button type="submit">Save</button>
+              <button type="button" id="opp-form-cancel" class="secondary">Cancel</button>
+            </div>
+          </form>
+
+          <div id="import-panel" class="panel" hidden>
+            <h2>Import CSV or JSON</h2>
+            <p class="muted">Columns / keys: employer, title, url (required); location, opportunity_type, description, deadline (YYYY-MM-DD), user_notes. Duplicates are skipped; existing records are never changed.</p>
+            <input id="import-file" type="file" accept=".csv,.json,text/csv,application/json">
+            <div id="import-result"></div>
+          </div>
+        </div>
       </div>
     </section>
 
+    <!-- ================= Resume Studio ================= -->
     <section id="tab-resume" class="tab" hidden>
       <div class="panel"><h2>Resume Studio</h2><p class="muted">Not built yet (Phase 3): verified experience records, tailored LaTeX resumes, PDF preview.</p></div>
     </section>
 
+    <!-- ================= Applications ================= -->
     <section id="tab-applications" class="tab" hidden>
-      <div class="panel"><h2>Applications</h2><p class="muted">Not built yet (Phase 2): application tracking with status history.</p></div>
+      <div class="toolbar">
+        <select id="a-status" aria-label="Status filter">
+          <option value="active">Active</option>
+          <option value="closed">Rejected / withdrawn</option>
+          <option value="all">All</option>
+          <option value="preparing">Preparing</option>
+          <option value="submitted">Submitted</option>
+          <option value="assessment">Assessment</option>
+          <option value="interviewing">Interviewing</option>
+          <option value="offer">Offer</option>
+        </select>
+        <span class="muted">Start an application from an opportunity's detail panel.</span>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <table id="app-table">
+            <thead><tr><th>Employer</th><th>Position</th><th>Status</th><th>Deadline</th><th>Submitted</th><th>Updated</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p id="app-count" class="muted"></p>
+        </div>
+        <div class="side">
+          <div id="app-detail" class="panel" hidden></div>
+        </div>
+      </div>
     </section>
 
+    <!-- ================= Settings ================= -->
     <section id="tab-settings" class="tab" hidden>
-      <div class="split">
-        <form id="settings-form" class="panel">
-          <h2>Preferences</h2>
-          <p class="muted">One item per line.</p>
-          <label>Preferred employers <textarea name="preferred_employers" rows="4"></textarea></label>
-          <label>Preferred locations <textarea name="preferred_locations" rows="3"></textarea></label>
-          <label>Engineering disciplines <textarea name="disciplines" rows="3"></textarea></label>
-          <label>Internship terms <textarea name="internship_terms" rows="2" placeholder="Summer 2027"></textarea></label>
-          <label>Backup mirror folder (optional) <input name="backup_mirror_dir" maxlength="500" placeholder="e.g. D:\AIMS-backups"></label>
-          <button type="submit">Save preferences</button>
-        </form>
-        <div class="panel">
-          <h2>System</h2>
-          <dl id="health"></dl>
-          <button id="shutdown" class="secondary">Shut down server</button>
+      <form id="settings-form">
+        <div class="split">
+          <div class="panel">
+            <h2>Profile</h2>
+            <p class="muted">Used for eligibility and relevance. "Not specified" makes matching requirements show as uncertain, never ineligible.</p>
+            <div class="grid2">
+              <label>U.S. citizen <select name="us_citizen"></select></label>
+              <label>U.S. person (citizen or permanent resident) <select name="us_person"></select></label>
+              <label>Needs visa sponsorship <select name="needs_sponsorship"></select></label>
+              <label>Degree level
+                <select name="degree_level">
+                  <option value="">Not specified</option>
+                  <option value="bachelors">Bachelor's</option>
+                  <option value="masters">Master's</option>
+                  <option value="phd">PhD</option>
+                </select>
+              </label>
+              <label>Expected graduation <input name="graduation" type="month"></label>
+              <label>GPA (4.0 scale) <input name="gpa" type="number" min="0" max="4" step="0.01"></label>
+            </div>
+            <label>Skills (one per line, e.g. SolidWorks, MATLAB, Python) <textarea name="skills" rows="6"></textarea></label>
+          </div>
+          <div class="panel">
+            <h2>Preferences</h2>
+            <p class="muted">One item per line.</p>
+            <label>Preferred employers <textarea name="preferred_employers" rows="4"></textarea></label>
+            <label>Preferred locations <textarea name="preferred_locations" rows="3"></textarea></label>
+            <label>Engineering disciplines <textarea name="disciplines" rows="3" placeholder="Aerospace&#10;Mechanical"></textarea></label>
+            <label>Internship terms <textarea name="internship_terms" rows="2" placeholder="Summer 2027"></textarea></label>
+            <label>Backup mirror folder (optional) <input name="backup_mirror_dir" maxlength="500" placeholder="e.g. D:\AIMS-backups"></label>
+          </div>
         </div>
+        <p><button type="submit">Save settings</button></p>
+      </form>
+      <div class="panel">
+        <h2>System</h2>
+        <dl id="health"></dl>
+        <button id="shutdown" class="secondary">Shut down server</button>
       </div>
     </section>
   </main>

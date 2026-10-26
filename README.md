@@ -11,7 +11,7 @@ applications. It runs entirely on this computer, costs nothing to operate, and n
 | Phase | State |
 |---|---|
 | 1. Foundation (local server, SQLite + migrations, launcher, UI shell) | **Done**: tests pass |
-| 2. Opportunity management, ranking, application tracking | Not started |
+| 2. Opportunity management, ranking, application tracking | **Done**: tests pass |
 | 3. Resume generation | Not started |
 | 4. Automated discovery (Greenhouse, Lever) | Not started |
 | 5. Backups and recovery | Not started. Only pre-migration snapshots exist so far |
