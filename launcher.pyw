@@ -1,6 +1,6 @@
 """Desktop-shortcut entry point (run with .venv\\Scripts\\pythonw.exe, so there is no console).
 
-If an AIMS server is already running, open the browser to it. Otherwise start one in the
+If an Apogee server is already running, open the browser to it. Otherwise start one in the
 background, wait until it is healthy, then open the browser. Any failure is shown in a
 message box together with the end of the server log.
 """
@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT))
 from aims import APP_ID  # noqa: E402
 from aims.config import load_config  # noqa: E402
 
-TITLE = "Internship Manager"
+TITLE = "Apogee"
 STARTUP_TIMEOUT_S = 30
 MAX_LOG_BYTES = 2_000_000
 EXIT_ALREADY_RUNNING = 3  # mirrors aims.server; not imported to keep uvicorn out of the launcher
@@ -119,7 +119,7 @@ def main() -> int:
             break
         time.sleep(0.3)
 
-    error_box(f"The Internship Manager server did not start.\n\nLog: {log_path}\n\n{log_tail(log_path)}")
+    error_box(f"The Apogee server did not start.\n\nLog: {log_path}\n\n{log_tail(log_path)}")
     return 1
 
 

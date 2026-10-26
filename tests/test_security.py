@@ -32,7 +32,7 @@ def test_no_cors_grant(client):
 
 def test_security_headers_and_frontend_served(client):
     r = client.get("/")
-    assert r.status_code == 200 and "Internship Manager" in r.text
+    assert r.status_code == 200 and "Apogee" in r.text
     assert "default-src 'self'" in r.headers["content-security-policy"]
     assert r.headers["x-content-type-options"] == "nosniff"
 

@@ -40,3 +40,33 @@ UI only pre-fills today's date when the user picks "submitted", and the user can
 PATCH accepts title, URL, and other details only for `source = 'manual'`. Discovered postings are kept
 in sync with their source (Phase 4), and local edits would be silently fought by imports.
 `user_state` and `user_notes` are always editable.
+
+## D8: Name: Apogee; internal identifiers unchanged (2026-10-26)
+The app is called Apogee everywhere the user sees it: UI, launcher, desktop shortcut, and docs.
+The package (`aims`), environment variables (`AIMS_*`), data folder (`%LOCALAPPDATA%\AIMS`), and
+request header (`X-AIMS-Request`) keep the original code name. Renaming those would orphan existing data
+for no benefit. `scripts/setup.ps1` removes the old "Internship Manager" shortcut only if it points at this launcher.
+
+## D9: UI follows the Polaris redesign principles (2026-10-26)
+Taken from `polaris/UI Redesign Planning.zip` (Organic design system plus the "1b, refined" notes): warm cream
+ground, soft over-rounded cards, pill controls, a header shell with pill navigation and counts, calm
+bold-body headings, sentence summaries with inline link-buttons, and sentence-style filters. Color carries
+meaning: terracotta for actions, sage only for success/complete, ochre for "needs attention". Fonts are not
+fetched from Google (local-first; the CSP allows only 'self'). Figtree is used if installed, otherwise Segoe UI.
+
+## D10: pdflatex directly, not latexmk (2026-10-26)
+MiKTeX's latexmk needs Perl, which isn't on PATH when Apogee starts from its shortcut. The single template
+has no cross-references, so one pdflatex pass is enough. Runs use `-no-shell-escape` and MiKTeX's
+`-disable-installer`, so a compile never executes shell commands or downloads packages silently.
+
+## D11: Settings PUT replaces only the sections sent (2026-10-26)
+Resume Studio's header form and the Settings page each save different sections. Full-replace semantics
+would let one form silently wipe the other's data, so PUT now merges at the top level.
+
+## D12: Resume content rules (2026-10-26)
+Only approved statements are used. A statement must be verified before it can be approved, and editing its
+text sends it back to draft. Generated resumes are immutable (trigger-enforced). Each one stores a full
+content snapshot, the template name plus hash, and file hashes. Statements a resume used can't be deleted.
+Fitting the page limit drops the lowest-scoring optional statements, never protected or user-forced ones,
+and never touches fonts or margins. Education/employment/research stay reverse-chronological; projects,
+leadership and awards are ordered by relevance.

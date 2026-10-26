@@ -11,12 +11,13 @@ from pathlib import Path
 from typing import Annotated, Iterator, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from aims import APP_ID, __version__, applications, db, opportunities, settings_store
+from aims import APP_ID, __version__, applications, db, experience, opportunities, settings_store, summary
 from aims.config import Config
+from aims.resume import service as resume_service
 from aims.web import security
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -25,6 +26,13 @@ STATIC_DIR = Path(__file__).parent / "static"
 class ImportIn(BaseModel):
     format: Literal["csv", "json"]
     content: str = Field(max_length=5_000_000)
+
+
+class ResumeRequest(BaseModel):
+    opportunity_id: int | None = None  # None: a general resume
+    page_limit: int = Field(1, ge=1, le=3)
+    include_ids: list[int] = Field(default_factory=list, max_length=500)
+    exclude_ids: list[int] = Field(default_factory=list, max_length=500)
 
 
 def conflict(detail: str, existing_id: int) -> JSONResponse:
@@ -39,7 +47,7 @@ def create_app(config: Config) -> FastAPI:
     finally:
         conn.close()
 
-    app = FastAPI(title="AIMS", version=__version__, docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="Apogee", version=__version__, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.config = config
     app.state.server = None  # set by aims.server so /api/shutdown can stop uvicorn
     security.install(app, config.port)
@@ -63,6 +71,10 @@ def create_app(config: Config) -> FastAPI:
             "data_dir": str(config.data_dir),
         }
 
+    @app.get("/api/summary")
+    def get_summary(conn: Conn):
+        return summary.summarize(conn, settings_store.load(conn))
+
     # ---- settings
 
     @app.get("/api/settings")
@@ -71,7 +83,11 @@ def create_app(config: Config) -> FastAPI:
 
     @app.put("/api/settings")
     def put_settings(body: settings_store.Settings, conn: Conn) -> settings_store.Settings:
-        settings_store.save(conn, body)
+        # Only the top-level sections present in the request are replaced, so a form that edits
+        # one section (e.g. the resume header) can never wipe the others.
+        current = settings_store.load(conn)
+        merged = current.model_copy(update={f: getattr(body, f) for f in body.model_fields_set})
+        settings_store.save(conn, merged)
         return settings_store.load(conn)
 
     # ---- opportunities
@@ -156,13 +172,103 @@ def create_app(config: Config) -> FastAPI:
             raise HTTPException(404, str(exc))
         return applications.get_application(conn, app_id)
 
+    # ---- verified experience
+
+    def run(fn, *args):
+        """Call a business function, translating its errors into HTTP responses."""
+        try:
+            return fn(*args)
+        except (experience.NotFound, resume_service.NotFound) as exc:
+            raise HTTPException(404, str(exc))
+        except experience.Conflict as exc:
+            raise HTTPException(409, str(exc))
+
+    @app.get("/api/experiences")
+    def list_experiences(conn: Conn):
+        return experience.list_experiences(conn)
+
+    @app.post("/api/experiences", status_code=201)
+    def create_experience(body: experience.ExperienceIn, conn: Conn):
+        return experience.get_experience(conn, experience.create_experience(conn, body))
+
+    @app.patch("/api/experiences/{experience_id}")
+    def patch_experience(experience_id: int, body: experience.ExperiencePatch, conn: Conn):
+        run(experience.update_experience, conn, experience_id, body)
+        return experience.get_experience(conn, experience_id)
+
+    @app.delete("/api/experiences/{experience_id}", status_code=204)
+    def delete_experience(experience_id: int, conn: Conn):
+        run(experience.delete_experience, conn, experience_id)
+
+    @app.post("/api/experiences/{experience_id}/statements", status_code=201)
+    def create_statement(experience_id: int, body: experience.StatementIn, conn: Conn):
+        run(experience.create_statement, conn, experience_id, body)
+        return experience.get_experience(conn, experience_id)
+
+    @app.patch("/api/statements/{statement_id}")
+    def patch_statement(statement_id: int, body: experience.StatementPatch, conn: Conn):
+        run(experience.update_statement, conn, statement_id, body)
+        exp_id = conn.execute("SELECT experience_id FROM statements WHERE id = ?", (statement_id,)).fetchone()[0]
+        return experience.get_experience(conn, exp_id)
+
+    @app.delete("/api/statements/{statement_id}", status_code=204)
+    def delete_statement(statement_id: int, conn: Conn):
+        run(experience.delete_statement, conn, statement_id)
+
+    @app.get("/api/skills")
+    def list_skills(conn: Conn):
+        return experience.list_skills(conn)
+
+    @app.post("/api/skills", status_code=201)
+    def create_skill(body: experience.SkillIn, conn: Conn):
+        run(experience.create_skill, conn, body)
+        return experience.list_skills(conn)
+
+    @app.patch("/api/skills/{skill_id}")
+    def patch_skill(skill_id: int, body: experience.SkillPatch, conn: Conn):
+        run(experience.update_skill, conn, skill_id, body)
+        return experience.list_skills(conn)
+
+    @app.delete("/api/skills/{skill_id}", status_code=204)
+    def delete_skill(skill_id: int, conn: Conn):
+        run(experience.delete_skill, conn, skill_id)
+
+    # ---- resumes
+
+    @app.post("/api/resumes/plan")
+    def plan_resume(body: ResumeRequest, conn: Conn):
+        return run(resume_service.plan, conn, body.opportunity_id, body.include_ids, body.exclude_ids)
+
+    @app.post("/api/resumes", status_code=201)
+    def generate_resume(body: ResumeRequest, conn: Conn):
+        try:
+            return run(resume_service.generate, conn, config, settings_store.load(conn), body.opportunity_id,
+                       body.page_limit, body.include_ids, body.exclude_ids)
+        except resume_service.GenerationError as exc:
+            return JSONResponse({"detail": str(exc), **exc.details}, status_code=422)
+
+    @app.get("/api/resumes")
+    def list_resumes(conn: Conn, opportunity_id: int | None = None):
+        return resume_service.list_documents(conn, opportunity_id)
+
+    @app.get("/api/resumes/{doc_id}")
+    def get_resume(doc_id: int, conn: Conn):
+        return run(resume_service.get_document, conn, doc_id)
+
+    @app.get("/api/resumes/{doc_id}/{kind}")
+    def resume_file(doc_id: int, kind: Literal["pdf", "tex"], conn: Conn, download: bool = False):
+        path, name = run(resume_service.document_file, conn, config, doc_id, kind)
+        media = "application/pdf" if kind == "pdf" else "text/plain; charset=utf-8"
+        disposition = "attachment" if download or kind == "tex" else "inline"
+        return FileResponse(path, media_type=media, filename=name, content_disposition_type=disposition)
+
     # ---- server
 
     @app.post("/api/shutdown")
     def shutdown(request: Request):
         server = request.app.state.server
         if server is None:
-            raise HTTPException(409, "Not running under the AIMS server")
+            raise HTTPException(409, "Not running under the Apogee server")
         server.should_exit = True
         return {"detail": "Shutting down"}
 

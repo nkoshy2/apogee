@@ -41,6 +41,7 @@ class ApplicationPatch(BaseModel):
     submitted_on: dt.date | None = None
     deadline: dt.date | None = None
     notes: Notes | None = None
+    resume_document_id: int | None = None  # null detaches
     event_note: Note = ""
 
 
@@ -105,6 +106,16 @@ def update(conn: sqlite3.Connection, app_id: int, patch: ApplicationPatch) -> No
                 changes[field] = value.isoformat() if value else None
         if "notes" in given and patch.notes is not None:
             changes["notes"] = patch.notes
+        if "resume_document_id" in given:
+            doc_id = patch.resume_document_id
+            if doc_id is not None and conn.execute(
+                    "SELECT 1 FROM resume_documents WHERE id = ?", (doc_id,)).fetchone() is None:
+                raise NotFound("Resume not found")
+            current = conn.execute("SELECT resume_document_id FROM applications WHERE id = ?", (app_id,)).fetchone()[0]
+            if doc_id != current:
+                changes["resume_document_id"] = doc_id
+                _event(conn, app_id, now, row["status"], row["status"],
+                       f"Resume #{doc_id} attached" if doc_id else "Resume detached")
         if patch.status is not None and patch.status != row["status"]:
             changes["status"] = patch.status
             _event(conn, app_id, now, row["status"], patch.status, patch.event_note)

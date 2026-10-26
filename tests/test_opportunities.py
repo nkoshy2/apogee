@@ -187,7 +187,8 @@ def test_import_rejects_bad_format(client):
 
 def test_ranking_survives_restart(config):
     with make_client(config) as c:
-        c.put("/api/settings", json={"profile": {"us_citizen": True, "skills": ["MATLAB"]}})
+        c.put("/api/settings", json={"profile": {"us_citizen": True}})
+        c.post("/api/skills", json={"name": "MATLAB"})
         o = add(c, n=1, description="Must be a U.S. citizen. MATLAB.")
     with make_client(config) as c:
         r = c.get(f"/api/opportunities/{o['id']}").json()["ranking"]

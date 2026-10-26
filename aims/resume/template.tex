@@ -1,0 +1,36 @@
+% Apogee resume template "classic". Fonts, margins and spacing are fixed here and never
+% changed by the generator. Its content hash is part of every stored document's
+% template_version, so any edit here is traceable; also bump TEMPLATE_NAME in latex.py.
+% The generator replaces the two marker lines below with escaped content that uses only
+% the macros defined in this preamble.
+\documentclass[letterpaper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\raggedright
+\titleformat{\section}{\large\bfseries\scshape}{}{0pt}{}[\vspace{-5pt}\rule{\linewidth}{0.4pt}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+\setlist[itemize]{leftmargin=1.3em, itemsep=1pt, topsep=2pt, parsep=0pt, partopsep=0pt}
+
+% \resumeheader{name}{contact line}
+\newcommand{\resumeheader}[2]{\begin{center}{\LARGE\bfseries #1}\\[4pt]{\small #2}\end{center}\vspace{-6pt}}
+% \entry{title}{organization}{dates}{location}
+\newcommand{\entry}[4]{\textbf{#1}\hfill{\small #3}\\\textit{#2}\hfill{\small\textit{#4}}\par}
+% \entryline{title}{dates}  (entries without organization or location, e.g. awards)
+\newcommand{\entryline}[2]{\textbf{#1}\hfill{\small #2}\par}
+% \skillline{category}{items}
+\newcommand{\skillline}[2]{\textbf{#1:} #2\par}
+
+\begin{document}
+%%HEADER%%
+%%BODY%%
+\end{document}

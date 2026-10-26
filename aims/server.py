@@ -1,4 +1,4 @@
-"""Run the AIMS server: localhost only, one instance per data directory.
+"""Run the Apogee server (internal package name: aims): localhost only, one instance per data directory.
 
 Usage: python -m aims.server   (normally started by launcher.pyw)
 Exit codes: 0 normal shutdown, 1 startup failure, 3 another instance already running.
@@ -39,7 +39,7 @@ def single_instance_lock(path: Path) -> Iterator[None]:
         try:
             msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
         except OSError:
-            raise AlreadyRunning(f"Another AIMS server is already using {path.parent}") from None
+            raise AlreadyRunning(f"Another Apogee server is already using {path.parent}") from None
         try:
             yield
         finally:
@@ -68,7 +68,7 @@ def main() -> int:
             app = create_app(config)
             server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=config.port, log_level="info"))
             app.state.server = server
-            log.info("Starting AIMS on %s (data: %s)", config.base_url, config.data_dir)
+            log.info("Starting Apogee on %s (data: %s)", config.base_url, config.data_dir)
             server.run()
             # A port-bind failure usually ends in SystemExit(1); guard against a quiet return too.
             return 0 if server.started else EXIT_FAILED
@@ -76,7 +76,7 @@ def main() -> int:
         log.warning("%s", exc)
         return EXIT_ALREADY_RUNNING
     except Exception:
-        log.exception("AIMS server failed to start")
+        log.exception("Apogee server failed to start")
         return EXIT_FAILED
 
 

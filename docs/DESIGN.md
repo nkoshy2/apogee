@@ -1,6 +1,6 @@
-# AIMS: Technical Design
+# Apogee: Technical Design
 
-Aerospace Internship Management System. This is a personal, local-first, single-user app.
+Apogee (internal code name AIMS, the Aerospace Internship Management System) is a personal, local-first, single-user app.
 This document covers the spec review, the design, and the implementation plan. Significant
 decisions and deviations are logged in [DECISIONS.md](DECISIONS.md).
 
@@ -43,17 +43,19 @@ One Python package, `aims/`, with one module per responsibility. No business mod
 aims/
   config.py          paths/port (env overrides: AIMS_DATA_DIR, AIMS_PORT)
   db.py              connection, transactions, migration runner          [Done]
-  migrations/*.sql   schema, append-only                                 [Done: 0001, 0002]
-  settings_store.py  preferences + profile facts (validated, JSON values) [Done]
+  migrations/*.sql   schema, append-only                                 [Done: 0001-0003]
+  settings_store.py  preferences, profile facts, resume header           [Done]
+  summary.py         counts behind the sentence summaries and nav badges [Done]
   opportunities.py   storage, dedup, search/filter, edit, manual import  [Done]
   ranking.py         eligibility + relevance + preference scoring        [Done]
   data/skills.json   skill/discipline vocabulary used by ranking         [Done]
   applications.py    tracking + append-only status history               [Done]
-  experience.py      verified experience + statements                    [Planned P3]
-  resume/            selection, LaTeX render, compile, validate          [Planned P3]
+  experience.py      experiences, statements (draft/verified/approved), skills [Done]
+  resume/            plan.py select+order, latex.py escape+render, build.py
+                     compile+validate, service.py generate+store, template.tex [Done]
   discovery/         adapters (greenhouse, lever), feed writer, importer [Planned P4]
   backup.py          create/verify/retain/restore                        [Planned P5]
-  web/               FastAPI app, security middleware, static frontend   [Done: shell]
+  web/               FastAPI app, security middleware, static frontend   [Done]
   server.py          single-instance lock + uvicorn                      [Done]
 launcher.pyw         shortcut target: start-or-reuse server, open browser [Done]
 discovery_cloud/     entrypoint run by GitHub Actions (imports aims.discovery only) [Planned P4]
@@ -81,10 +83,17 @@ SQLite, WAL, `foreign_keys=ON`, `synchronous=FULL`. Timestamps are UTC ISO-8601 
 - `application_events(id, application_id FK, at, from_status, to_status, note)`. Creation has `from_status` NULL. A note-only event has `from = to`.
 - Triggers enforce the integrity rules: events cannot be updated or deleted, and an application cannot move to a different opportunity. An opportunity with an application cannot be deleted (FK RESTRICT).
 
+**0003 (Done)**
+
+- `experiences(kind education|employment|research|project|leadership|achievement, title, organization, location, start_date, end_date (YYYY-MM), is_current, protected)`. Education lives here too (one table, simpler than a separate one).
+- `statements(experience_id FK RESTRICT, text, status draft|verified|approved, protected, tags_json, sort_order)`.
+- `skills(name UNIQUE NOCASE, category)`. The migration copies Phase 2's `profile.skills` into this table. Ranking reads skills from here (exposed read-only as `profile.skills`).
+- `resume_documents(opportunity_id, template_version, page_limit, page_count, content_json, validation_json, folder UNIQUE, tex_sha256, pdf_sha256)`, immutable by trigger. Written only for validated generations. Files live in `documents/<folder>/resume.{tex,pdf,log}`.
+- `resume_statements(resume_id, statement_id FK RESTRICT, position)`, so statements a resume used can't be deleted.
+- `applications.resume_document_id` (which resume was sent). Attaching or detaching one is logged in the history.
+
 **Planned**
 
-- P3: add `applications.resume_document_id`.
-- P3: `education`, `experiences(kind: project|research|employment|achievement, title, org, start, end, ...)`, `skills(name, aliases)`, `experience_skills`, `statements(experience_id FK, text, status draft|verified|approved, protected, tags)`, `resume_documents(id, opportunity_id, template_version, selection_json, tex_sha256, pdf_sha256, page_count, status, created_at)`. Files are stored at `documents/<id>/resume.{tex,pdf}` and are never overwritten. A failed compile writes nothing to the approved document.
 - P4: `sources(id, kind, source_key, employer, enabled)`, `source_checks(id, source_id, feed_run_id, checked_at, status ok|failed, complete, posting_count, error)`, `imported_feed_runs(run_id PK, imported_at)`, `opportunity_snapshots(opportunity_id, fetched_at, content_sha256, raw_json)` (written only when the content hash changes; this is the audit trail).
 - P5: `meta(data_revision)` plus triggers.
 
@@ -101,8 +110,14 @@ All endpoints are under `/api`. JSON only. Mutations require the header `X-AIMS-
 | `PATCH /api/opportunities/{id}`: save/dismiss/notes always; details only for manual entries | Done |
 | `POST /api/opportunities/import` (`{format: csv\|json, content}`, per-row result, never modifies existing) | Done |
 | `GET/POST /api/applications`, `GET/PATCH /api/applications/{id}`, `POST /api/applications/{id}/events` | Done |
+| `GET /api/summary` (counts for sentence summaries and nav badges) | Done |
+| `GET/POST /api/experiences`, `PATCH/DELETE /api/experiences/{id}`, `POST /api/experiences/{id}/statements` | Done |
+| `PATCH/DELETE /api/statements/{id}` (verify-before-approve; edits reset to draft; used ones can't be deleted) | Done |
+| `GET/POST /api/skills`, `PATCH/DELETE /api/skills/{id}` | Done |
+| `POST /api/resumes/plan` (proposed content with scores and reasons; `include_ids`/`exclude_ids`) | Done |
+| `POST /api/resumes` (generate; 422 with reasons and checks on failure, nothing saved) | Done |
+| `GET /api/resumes[?opportunity_id=]`, `GET /api/resumes/{id}`, `GET /api/resumes/{id}/pdf\|tex[?download=true]` | Done |
 | `POST /api/shutdown` | Done |
-| `/api/experience…`, `/api/statements…`, `/api/resumes…` (+ PDF preview/export download) | P3 |
 | `/api/discovery/sources`, `/api/discovery/import`, `/api/discovery/health` | P4 |
 | `/api/backups` (list/create/verify/restore) | P5 |
 
@@ -148,14 +163,19 @@ GitHub Actions (cron, roughly every 12 h) runs the adapters and commits `feed/v1
 - **Performance:** about 1 ms per posting cold (2,000 postings ≈ 2 s). Results are memoized in memory on the exact inputs they read, so repeat views take about 0.1 s.
 - **Interim:** profile skills are typed in Settings for now. Phase 3 adds skills from verified experience records.
 
-## 8. Resume generation (Phase 3)
+## 8. Resume generation (Phase 3, Done)
 
-1. Candidates: approved statements only. Protected statements are always included.
-2. Score each by tag overlap with the job (same vocabulary as ranking). Order optional sections and statements by score.
-3. Render into one Jinja-free LaTeX template using simple `\VAR{}` placeholders and escape all text for LaTeX.
-4. Compile into a temp dir. Check the page count with `pypdf`. If over the limit, drop the lowest-scoring optional statement and repeat (bounded). If protected content alone overflows, stop and report.
-5. Validate: compile OK, page count, extractable text, section headings appear in order, and no `Overfull \hbox` above a threshold in the log.
-6. On success, move to `documents/<id>/` and record the selection ids, template version, and hashes. On failure, keep the previous document.
+1. **Candidates:** approved statements only. Protected statements and entries are always included. Education and awards appear even without bullet statements. Other entries need at least one approved statement.
+2. **Scoring** (`resume/plan.py`): 10 points per skill/discipline tag shared with the posting (the same vocabulary as ranking, plus the statement's own tags), and up to 5 for other shared significant words.
+   - Education comes first and Skills last. The sections in between are ordered by total relevance.
+   - Education, employment and research entries stay reverse-chronological. Projects, leadership and awards are ordered by relevance.
+   - Each entry starts with its top 4 statements. The user can tick or untick any approved statement.
+3. **Rendering** (`resume/latex.py`): every user string is escaped. Common Unicode (dashes, quotes, ±, °, µ, →) is mapped to LaTeX. Anything else is rejected with a clear message rather than risking a broken PDF. The body uses only the template's own macros (`\resumeheader`, `\entry`, `\entryline`, `\skillline`).
+4. **Compile and fit** (`resume/build.py`, `resume/service.py`): `pdflatex` runs in a private temp folder, at most 8 attempts. If the PDF is over the page limit, the overflow lines are measured with `pypdf`, and about that many lines' worth of the lowest-scoring optional statements are dropped. If only protected or user-forced content remains, generation stops and explains why. Fonts and margins are never changed.
+5. **Validate:**
+   - Must pass: compiles, page count, extractable text, and reading order (name, then section headings, in order).
+   - Warnings only: any statement that can't be read back, and `Overfull \hbox` > 2pt.
+6. **Store:** copy into a new `documents/<timestamp-uuid>/` folder, then insert the immutable row (content snapshot, template name+hash, file hashes, statement links). If the insert fails, the folder is removed. Failed generations store nothing and leave earlier resumes untouched.
 
 ## 9. Backup format (Phase 5)
 
@@ -176,11 +196,11 @@ Excluded: logs, lock files, temp files, any tokens. Retention: delete backups ol
 | Dependency | Status |
 |---|---|
 | Python 3.14 + FastAPI/uvicorn/pydantic | Validated |
-| MiKTeX `pdflatex`, `latexmk` | Present. `latexmk` needs Perl not on PATH (R4) |
+| MiKTeX `pdflatex` | Validated (MiKTeX 25.12). `latexmk` not used (D10) |
 | Greenhouse / Lever public APIs for the pilot employers | Validate in P4 with the probe script |
 | Non-Greenhouse/Lever priority employer, gov/research source | Feasibility probe only. Not blocking |
 | GitHub Actions schedule + repo visibility | User decision in P4 (R3) |
-| `pypdf` | Add in P3 |
+| `pypdf` | Validated, pinned 6.21.2 |
 
 ## 11. Testing approach
 
@@ -215,7 +235,7 @@ Each task leaves the app working and tested.
 7. Applications plus event history
 8. Applications tab
 
-**Phase 3: Resume generation**
+**Phase 3: Resume generation (Done)**
 1. Experience/statement schema and CRUD with verify/approve
 2. Template plus LaTeX escaping
 3. Selection algorithm

@@ -35,6 +35,14 @@ class Config:
         return self.data_dir / "backups"
 
     @property
+    def documents_dir(self) -> Path:
+        return self.data_dir / "documents"
+
+    @property
+    def tmp_dir(self) -> Path:
+        return self.data_dir / "tmp"
+
+    @property
     def lock_path(self) -> Path:
         return self.data_dir / "server.lock"
 
@@ -43,7 +51,7 @@ class Config:
         return f"http://127.0.0.1:{self.port}"
 
     def ensure_dirs(self) -> None:
-        for d in (self.data_dir, self.log_dir, self.backup_dir):
+        for d in (self.data_dir, self.log_dir, self.backup_dir, self.documents_dir, self.tmp_dir):
             d.mkdir(parents=True, exist_ok=True)
 
 

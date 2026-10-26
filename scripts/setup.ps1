@@ -1,9 +1,10 @@
 # One-time setup: create the virtual environment, install pinned dependencies,
-# and put an "Internship Manager" shortcut on the desktop.
+# and put an "Apogee" shortcut on the desktop.
 # Usage (from the project folder):  powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $venv = Join-Path $root ".venv"
+$launcher = Join-Path $root "launcher.pyw"
 
 if (-not (Test-Path (Join-Path $venv "Scripts\python.exe"))) {
     Write-Host "Creating virtual environment..."
@@ -13,12 +14,23 @@ if (-not (Test-Path (Join-Path $venv "Scripts\python.exe"))) {
 if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed." }
 
 $desktop = [Environment]::GetFolderPath("Desktop")
-$shortcutPath = Join-Path $desktop "Internship Manager.lnk"
 $shell = New-Object -ComObject WScript.Shell
+
+# The app was called "Internship Manager" before it was named Apogee. Remove that shortcut,
+# but only if it is ours (points at this project's launcher).
+$legacy = Join-Path $desktop "Internship Manager.lnk"
+if (Test-Path $legacy) {
+    if ($shell.CreateShortcut($legacy).Arguments -like "*$launcher*") {
+        Remove-Item $legacy
+        Write-Host "Removed old shortcut: $legacy"
+    }
+}
+
+$shortcutPath = Join-Path $desktop "Apogee.lnk"
 $sc = $shell.CreateShortcut($shortcutPath)
 $sc.TargetPath = Join-Path $venv "Scripts\pythonw.exe"
-$sc.Arguments = '"' + (Join-Path $root "launcher.pyw") + '"'
+$sc.Arguments = '"' + $launcher + '"'
 $sc.WorkingDirectory = $root
-$sc.Description = "Start or open the Internship Manager"
+$sc.Description = "Start or open Apogee, the internship manager"
 $sc.Save()
 Write-Host "Shortcut created: $shortcutPath"
