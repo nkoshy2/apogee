@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internship Manager</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Internship Manager</h1>
+    <nav>
+      <a href="#opportunities" data-tab="opportunities">Opportunities</a>
+      <a href="#resume" data-tab="resume">Resume Studio</a>
+      <a href="#applications" data-tab="applications">Applications</a>
+      <a href="#settings" data-tab="settings">Settings</a>
+    </nav>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <section id="tab-opportunities" class="tab">
+      <div class="split">
+        <div class="panel">
+          <h2>Opportunities</h2>
+          <table id="opp-table">
+            <thead><tr><th>Employer</th><th>Title</th><th>Location</th><th>Type</th><th>Deadline</th><th>Added</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p id="opp-empty" class="muted" hidden>No opportunities yet. Add one using the form.</p>
+          <div id="opp-detail" class="detail" hidden></div>
+        </div>
+        <form id="opp-form" class="panel">
+          <h2>Add manually</h2>
+          <label>Employer <input name="employer" required maxlength="200"></label>
+          <label>Title <input name="title" required maxlength="300"></label>
+          <label>Official posting URL <input name="url" type="url" required maxlength="2000" placeholder="https://"></label>
+          <label>Location <input name="location" maxlength="300"></label>
+          <label>Type
+            <select name="opportunity_type">
+              <option value="internship">Internship</option>
+              <option value="co-op">Co-op</option>
+              <option value="government">Government program</option>
+              <option value="research">University research</option>
+              <option value="full-time">Full-time</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Deadline <input name="deadline" type="date"></label>
+          <label>Description <textarea name="description" rows="6"></textarea></label>
+          <label>Notes <textarea name="user_notes" rows="3"></textarea></label>
+          <button type="submit">Add opportunity</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="tab-resume" class="tab" hidden>
+      <div class="panel"><h2>Resume Studio</h2><p class="muted">Not built yet (Phase 3): verified experience records, tailored LaTeX resumes, PDF preview.</p></div>
+    </section>
+
+    <section id="tab-applications" class="tab" hidden>
+      <div class="panel"><h2>Applications</h2><p class="muted">Not built yet (Phase 2): application tracking with status history.</p></div>
+    </section>
+
+    <section id="tab-settings" class="tab" hidden>
+      <div class="split">
+        <form id="settings-form" class="panel">
+          <h2>Preferences</h2>
+          <p class="muted">One item per line.</p>
+          <label>Preferred employers <textarea name="preferred_employers" rows="4"></textarea></label>
+          <label>Preferred locations <textarea name="preferred_locations" rows="3"></textarea></label>
+          <label>Engineering disciplines <textarea name="disciplines" rows="3"></textarea></label>
+          <label>Internship terms <textarea name="internship_terms" rows="2" placeholder="Summer 2027"></textarea></label>
+          <label>Backup mirror folder (optional) <input name="backup_mirror_dir" maxlength="500" placeholder="e.g. D:\AIMS-backups"></label>
+          <button type="submit">Save preferences</button>
+        </form>
+        <div class="panel">
+          <h2>System</h2>
+          <dl id="health"></dl>
+          <button id="shutdown" class="secondary">Shut down server</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

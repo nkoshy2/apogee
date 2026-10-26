@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Private data never lives in the repo (see docs/DECISIONS.md D2); guard anyway.
+data/
+*.db
+*.db-wal
+*.db-shm
+*.log
