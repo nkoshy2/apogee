@@ -1,0 +1,1300 @@
+{
+ "_comment": "Real internship titles from the 2026-10-26 discovery run, hand-labeled before the ranking was tuned. E = engineering relevant to an aerospace/mechanical student, O = other engineering, N = non-engineering. Used by tests/test_ranking.py.",
+ "titles": [
+  {
+   "title": "2027 Business Operations Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Business Operations Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Deployment Logistics Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Electrical Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "2027 Field Test Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Finance Data Analyst Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Firmware Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "2027 Flight Software Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "2027 Flight Test Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Guidance, Navigation, & Control Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Industrial Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "2027 Low Observables Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Manufacturing Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Mechanical Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Product Designer Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Product Sourcing Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Quality & Test Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Reliability Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Software Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "2027 Supply Chain Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "2027 Systems Engineer Intern",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "2027 Technical Program Manager Intern",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "Winter 2027 Business Operations Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "Winter 2027 EWIS Harness Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "Winter 2027 Electrical Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "Winter 2027 Manufacturing Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Mechanical Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Propulsion Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Quality & Test Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Reliability Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Research Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Robotics Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Software Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "O"
+  },
+  {
+   "title": "Winter 2027 Supply Chain Analyst Co-op",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "Winter 2027 Systems Engineer Co-op",
+   "employer": "Anduril Industries",
+   "label": "E"
+  },
+  {
+   "title": "Winter 2027 Technical Program Management Co-op",
+   "employer": "Anduril Industries",
+   "label": "N"
+  },
+  {
+   "title": "Antenna Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Antenna Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Assembly, Integration, and Test Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Assembly, Integration, and Test Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Automation & Controls Engineering Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Automation & Controls Engineering Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Avionics Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Avionics Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "CAD Engineer Intern (Spring 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "CAD Engineer Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "CAD Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Electrical Integration Intern - Avionics (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Electrical Integration Intern - RF (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Electrical Reliability Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Electrical Reliability Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Environmental Test Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "FPGA Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "FPGA Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Flight Software Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Flight Software Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Guidance, Navigation, and Control Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Hardware Test Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Harness Design Engineer Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Harness Design Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Harness Manufacturing Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Mechanical Engineer Intern (Spring 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineer Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Network Planning Sales Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "N"
+  },
+  {
+   "title": "Power Electronics Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Power Electronics Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Production Quality Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Production Quality Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Engineer Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Manufacturing Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Manufacturing Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Test Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "RF Hardware Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "RF Hardware Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "RF Validation Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "RF Validation Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Radiation Effects Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Defined Radio Hardware Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Defined Radio Hardware Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Developer, Network Software Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Developer, Network Software Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Engineer - Enterprise Systems Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Software Engineer Backend Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "O"
+  },
+  {
+   "title": "Supplier Quality Engineer Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Technical Project Management Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "N"
+  },
+  {
+   "title": "Technical Project Management Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "N"
+  },
+  {
+   "title": "Thermal Intern (Summer 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Thermal Intern (Winter 2027)",
+   "employer": "Astranis",
+   "label": "E"
+  },
+  {
+   "title": "Space Team Intern",
+   "employer": "HawkEye 360",
+   "label": "E"
+  },
+  {
+   "title": "Avionics Electrical Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Build Reliability Engineering Intern - Spring 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Environmental, Health, and Safety (EHS) Intern - 2027",
+   "employer": "Hermeus",
+   "label": "N"
+  },
+  {
+   "title": "Flight Operations & Airworthiness Engineering Intern - Spring/Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Flight Software & GNC Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Flight Software Engineering Intern (Simulation/Hardware-In-The-Loop) - Spring & Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Loads & Dynamics Engineering Intern - Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Intern - Spring/Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineering Intern - Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Mission Systems Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Component Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Engineering Intern - Spring/Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Test Engineering Intern - Spring/Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Software Engineering Intern (Command & Control) - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Software Engineering Intern (HIL) - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Software Engineering Intern (Modeling & Simulation) - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "O"
+  },
+  {
+   "title": "Structures Engineering Intern - Spring/Summer/Fall 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Structures/Mechanical Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Subsystem Test Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "Supply Chain Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "N"
+  },
+  {
+   "title": "Test and Operations Engineering Intern - Spring/Summer 2027",
+   "employer": "Hermeus",
+   "label": "E"
+  },
+  {
+   "title": "AI & Internal Tools Software Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "O"
+  },
+  {
+   "title": "Avionics Embedded Software Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "O"
+  },
+  {
+   "title": "Avionics Mechanical Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "E"
+  },
+  {
+   "title": "RF Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "O"
+  },
+  {
+   "title": "Vehicle Software Engineer - Summer Internship 2027",
+   "employer": "Inversion Space",
+   "label": "O"
+  },
+  {
+   "title": "Electrical Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "O"
+  },
+  {
+   "title": "Environmental Test Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "Flight Software Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "O"
+  },
+  {
+   "title": "GNC Hardware Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "GNC Software Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "Ground Software Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "O"
+  },
+  {
+   "title": "Harness Design Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "O"
+  },
+  {
+   "title": "Industrial Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "O"
+  },
+  {
+   "title": "International Business Development Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "N"
+  },
+  {
+   "title": "Junior Help Desk Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "N"
+  },
+  {
+   "title": "Legal Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "N"
+  },
+  {
+   "title": "Mission Architecture Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "People Operations Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "N"
+  },
+  {
+   "title": "Quality Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "Spacecraft Test Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "Thermal Engineering Intern (Summer 2027)",
+   "employer": "Muon Space",
+   "label": "E"
+  },
+  {
+   "title": "Working Student, Professional Services",
+   "employer": "Planet",
+   "label": "N"
+  },
+  {
+   "title": "Additive Manufacturing Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Additive Manufacturing Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Avionics Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Business Development Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Business Development Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Combustion Devices Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Combustion Devices Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Electrical Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Electrical Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Export Compliance Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Flight Software Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Flight Software Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Fluid Component Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Fluid Component Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Fluid Systems Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Fluid Systems Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Government Operations Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Government Operations Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Ground Systems Engineering Intern",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Ground Systems Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Ground Systems Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "HITL Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Indirect Procurement Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Indirect Procurement Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Integration & Test Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Mechanical Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Neutron Mechanical Development Intern",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Optical Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "People & Culture Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "People & Culture Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Propulsion Analyst Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Analyst Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Design Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Design Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "R&D Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "R&D Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "RF Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "O"
+  },
+  {
+   "title": "Security Analyst Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Security Analyst Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Supplier Quality Engineer Intern",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Supply Chain Intern",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Supply Chain Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Supply Chain Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Systems Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Talent Acquisition Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "N"
+  },
+  {
+   "title": "Test Engineering Intern - Avionics Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Test Engineering Intern - Manufacturing Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Test Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Test Engineering Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Thermal Engineering Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Turbomachinery Intern Spring 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Turbomachinery Intern Summer 2027",
+   "employer": "Rocket Lab",
+   "label": "E"
+  },
+  {
+   "title": "Electrical Engineering Co-op - January 2027",
+   "employer": "Shield AI",
+   "label": "O"
+  },
+  {
+   "title": "June 2027 Co-op - Reliability Engineering #5953",
+   "employer": "Shield AI",
+   "label": "E"
+  },
+  {
+   "title": "Summer 2027 - Advanced Manufacturing Engineering Intern",
+   "employer": "Shield AI",
+   "label": "E"
+  },
+  {
+   "title": "Summer 2027 - Electrical Engineering Co-op (June 2027)",
+   "employer": "Shield AI",
+   "label": "O"
+  },
+  {
+   "title": "Summer 2027 - Electrical Engineering Intern",
+   "employer": "Shield AI",
+   "label": "O"
+  },
+  {
+   "title": "Summer 2027 - Mechanical Engineering Intern",
+   "employer": "Shield AI",
+   "label": "E"
+  },
+  {
+   "title": "Summer 2027 - Software Engineer Intern",
+   "employer": "Shield AI",
+   "label": "O"
+  },
+  {
+   "title": "Spring 2027 Business Operations Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "N"
+  },
+  {
+   "title": "Spring 2027 Civil Engineering Internship",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "Spring 2027 Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "E"
+  },
+  {
+   "title": "Spring 2027 Graduate Engineer Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "E"
+  },
+  {
+   "title": "Spring 2027 Silicon Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "Spring 2027 Software Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "Summer 2027 Business Operations Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "N"
+  },
+  {
+   "title": "Summer 2027 Civil Engineering Internship",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "Summer 2027 Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "E"
+  },
+  {
+   "title": "Summer 2027 Graduate Engineer Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "E"
+  },
+  {
+   "title": "Summer 2027 Silicon Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "Summer 2027 Software Engineering Internship/Co-op",
+   "employer": "SpaceX",
+   "label": "O"
+  },
+  {
+   "title": "2027 Summer Additive Manufacturing Engineering Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Avionics Electrical Engineer Intern",
+   "employer": "Ursa Major",
+   "label": "O"
+  },
+  {
+   "title": "2027 Summer Business Process & ERP Documentation Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer Combustion Devices Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Design Engineering Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Embedded Flight Software Intern",
+   "employer": "Ursa Major",
+   "label": "O"
+  },
+  {
+   "title": "2027 Summer Facilities & Capital Projects Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer IT Infrastructure & Automation Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer Industrial Hygienist & Ergonomist Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer Manufacturing Engineer Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Manufacturing Engineering Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Marketing & Communications Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer Materials & Processes Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer People Operations Intern",
+   "employer": "Ursa Major",
+   "label": "N"
+  },
+  {
+   "title": "2027 Summer Propulsion Engineer, Hypersonic Vehicle Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Software Development Intern",
+   "employer": "Ursa Major",
+   "label": "O"
+  },
+  {
+   "title": "2027 Summer Systems Engineering Intern",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "2027 Summer Test Engineering Internship",
+   "employer": "Ursa Major",
+   "label": "E"
+  },
+  {
+   "title": "Aerodynamics & Analysis Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Avionics Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Biologics Formulation Research Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Construction Management Internship – Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Cybersecurity Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Cybersecurity Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Environmental Health & Safety (EHS) Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Environmental Health & Safety (EHS) Internship – Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Flight Software Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Flight Software Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Formulation Science Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Guidance, Navigation & Controls (GNC) Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Guidance, Navigation & Controls (GNC) Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Manufacturing Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Mechanisms & Payload Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Mission Operations Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Pharmaceutical Lab Internship (Crystallization) Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Propulsion Engineering Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Propulsion Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Site Reliability Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "O"
+  },
+  {
+   "title": "Structures Engineering Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Structures Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Supply Chain Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "N"
+  },
+  {
+   "title": "Thermal Engineering Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Vehicle Integration & Test Internship - Spring 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Vehicle Integration & Test Internship - Summer 2027",
+   "employer": "Varda Space Industries",
+   "label": "E"
+  },
+  {
+   "title": "Emerging Talent - Electrical Engineering Internship",
+   "employer": "Vast",
+   "label": "O"
+  },
+  {
+   "title": "Emerging Talent - Manufacturing Engineering Internship",
+   "employer": "Vast",
+   "label": "E"
+  },
+  {
+   "title": "Emerging Talent - Mechanical/Aerospace Engineering Internship",
+   "employer": "Vast",
+   "label": "E"
+  }
+ ]
+}

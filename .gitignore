@@ -3,7 +3,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 # Private data never lives in the repo (see docs/DECISIONS.md D2); guard anyway.
-data/
+# Anchored to the repo root: aims/data/ and tests/data/ hold public files that must be committed.
+/data/
 *.db
 *.db-wal
 *.db-shm

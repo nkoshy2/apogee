@@ -87,3 +87,27 @@ commit. Local import verifies each run's SHA-256 from the index before using it.
 The cloud job can only read what's in the repository, so `aims/discovery/sources.json` is the single
 source of truth for both cloud and local runs. Settings shows health per source. Editing the list is a
 one-line change to that file. Revisit if adding sources becomes frequent.
+
+## D16: Ranking retuned against real postings (2026-10-27)
+On the first 287 real postings the original relevance model ordered roles no better than chance:
+engineering ranked above non-engineering only 51.8% of the time, and 10 of the top 20 were roles like
+Supply Chain or Security Analyst. There were three causes:
+- Skill score was a ratio, so a posting naming one skill you have scored full marks while one naming many
+  topics you didn't list scored zero.
+- Field topics (propulsion, thermal) were treated as tools.
+- Preference was added on top, so a preferred employer lifted any role.
+
+The fix:
+- Classify the role from its title (a vocabulary list with explicit precedence rules) and cap
+  non-engineering roles at 10 relevance.
+- Count your skills with diminishing returns and no penalty for unlisted ones.
+- Count majors only in degree sentences.
+- Make preference scale relevance instead of adding to it.
+
+Measured on the same hand-labeled postings (labels written before any rule change):
+- Engineering above non-engineering: 99.3%.
+- Relevant above other engineering: 95.1%.
+- Non-engineering roles in the top 50: none.
+
+The labeled titles are kept as a regression test. A graduation rule that misread "Graduate Engineer
+Internship" as a date requirement was fixed at the same time.

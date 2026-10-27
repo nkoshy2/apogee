@@ -5,10 +5,15 @@ Three separate judgments, each with human-readable reasons:
 - Eligibility: "eligible" | "uncertain" | "ineligible". An opportunity is ineligible only
   when the posting states a mandatory requirement that the profile definitely fails.
   A requirement the profile cannot answer makes it "uncertain", never "ineligible".
-- Relevance (0-100): skill tags found in the posting vs. the user's skills, plus discipline.
-- Preference (0-100): preferred employers, locations, and internship terms.
+- Relevance (0-100): what kind of role the title describes (role fit), how many of the user's
+  skills the posting mentions, and whether it asks for the user's majors. Non-engineering roles
+  are capped low but never hidden.
+- Preference (0-100): preferred employers, locations, and internship terms. It scales relevance
+  rather than adding to it, so a preferred employer can lift a relevant role but cannot make an
+  irrelevant one rank high.
 
-The weights below are the whole model; change them here.
+The weights below are the whole model; change them here. They were tuned against 287 real,
+hand-labeled postings (docs/DECISIONS.md D16).
 """
 
 from __future__ import annotations
@@ -25,9 +30,13 @@ from aims.settings_store import Profile, Settings
 ELIGIBLE, UNCERTAIN, INELIGIBLE = "eligible", "uncertain", "ineligible"
 ELIGIBILITY_ORDER = {ELIGIBLE: 0, UNCERTAIN: 1, INELIGIBLE: 2}
 
-W_SKILLS, W_DISCIPLINE = 70, 30            # relevance components, sum 100
+# Relevance = role fit (max 50) + skills (max 30) + degree fit (max 20).
+ROLE_POINTS = {"match": 50, "any": 40, "generic": 40, "other": 20, "unknown": 20, "non_engineering": 0}
+SKILL_POINTS = (0, 15, 24, 30)               # by how many of your skills the posting mentions (3+ = all 30)
+DEGREE_POINTS = {"match": 20, "any_engineering": 15, "unknown": 10, "other": 0}
+NON_ENGINEERING_CAP = 10                     # relevance ceiling for non-engineering roles
 W_EMPLOYER, W_LOCATION, W_TERM = 40, 30, 30  # preference components, sum 100
-W_RELEVANCE, W_PREFERENCE = 0.6, 0.4       # overall score
+PREFERENCE_FLOOR = 0.6                       # overall = relevance x (0.6 + 0.4 x preference / 100)
 
 VOCABULARY_PATH = Path(__file__).parent / "data" / "skills.json"
 
@@ -54,7 +63,8 @@ _GPA = re.compile(
     r"|\b(\d\.\d{1,2})\s*(?:/\s*4\.0\s*)?\+?\s*(?:cumulative\s+|overall\s+)?GPA\b",
     re.I,
 )
-_GRADUATION = re.compile(r"graduat", re.I)
+# Graduation wording only: "Graduate Engineer Internship" is a job title, not a date requirement.
+_GRADUATION = re.compile(r"\bgraduation\b|\bgraduating\b|\bgraduate[sd]?\s+(between|by|in|before|after|no later|from|prior)\b", re.I)
 _MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], start=1)}
 _SEASONS = {"spring": 5, "summer": 8, "fall": 12, "autumn": 12, "winter": 12}
@@ -129,6 +139,43 @@ def load_vocabulary(path: Path = VOCABULARY_PATH) -> tuple[tuple[Term, ...], tup
     return skills, disciplines
 
 
+@dataclass(frozen=True)
+class Role:
+    name: str
+    kind: str  # engineering | generic | non_engineering
+    disciplines: frozenset[str]
+    phrases: tuple[tuple[str, ...], ...]
+
+
+@lru_cache(maxsize=4)
+def load_roles(path: Path = VOCABULARY_PATH) -> tuple[Role, ...]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return tuple(Role(r["name"], r["kind"], frozenset(r["disciplines"]), tuple(p for p in {_phrase(a) for a in r["aliases"]} if p))
+                 for r in data["roles"])
+
+
+def _inside(short: tuple[str, ...], long: tuple[str, ...]) -> bool:
+    """True if `short` appears as a contiguous run inside the longer phrase `long`."""
+    n = len(short)
+    return n < len(long) and any(long[i:i + n] == short for i in range(len(long) - n + 1))
+
+
+def classify_role(title: str) -> dict:
+    """What kind of role a job title describes. Rules (in order):
+    a technical field beats a non-engineering match ('Supplier Quality Engineer' is quality engineering);
+    a non-engineering match beats the bare words engineer/engineering ('Business Operations Engineer');
+    an alias inside a longer matched alias doesn't count ('reliability' within 'site reliability')."""
+    tokens = Tokens.of(title)
+    hits = [(role, p) for role in load_roles() for p in role.phrases if tokens.has(p)]
+    hits = [(role, p) for role, p in hits if not any(_inside(p, other) for _, other in hits)]
+    for kind in ("engineering", "non_engineering", "generic"):
+        roles = list(dict.fromkeys(role for role, _ in hits if role.kind == kind))
+        if roles:
+            return {"kind": kind, "fields": [r.name for r in roles],
+                    "disciplines": frozenset().union(*(r.disciplines for r in roles))}
+    return {"kind": "unknown", "fields": [], "disciplines": frozenset()}
+
+
 def _tags_in(text: str, terms: tuple[Term, ...], tokens: Tokens | None = None) -> list[str]:
     tokens = Tokens.of(text) if tokens is None else tokens
     return [t.name for t in terms if any(tokens.has(p) for p in t.phrases)]
@@ -169,9 +216,11 @@ def _sentences(text: str) -> list[str]:
     return [s for s in (_clean(text[a:b]) for a, b in _sentence_spans(text)) if s]
 
 
-def _rule_sentences(text: str) -> list[str]:
-    """Only the sentences that contain a rule trigger word, found in one pass over the text."""
-    hits = [m.start() for m in _TRIGGER.finditer(text.lower())]
+def _rule_sentences(text: str, trigger: re.Pattern | None = None) -> list[str]:
+    """Only the sentences containing a trigger match, found in one pass over the text.
+    The default trigger is the eligibility rules' (it expects lowercased text)."""
+    hits = ([m.start() for m in _TRIGGER.finditer(text.lower())] if trigger is None
+            else [m.start() for m in trigger.finditer(text)])
     if not hits:
         return []
     spans = _sentence_spans(text)
@@ -295,46 +344,105 @@ def eligibility(text: str, profile: Profile, has_description: bool = True) -> di
 
 # ---------------------------------------------------------------- relevance & preference
 
-def relevance(text: str, settings: Settings) -> dict:
+# Majors only count when named in a sentence about degrees, so boilerplate such as
+# "we are an aerospace company" doesn't look like a degree requirement.
+_DEGREE_SENTENCE = re.compile(r"\b(degrees?|majors?|majoring|pursuing|bachelor|master|ph\.?\s?d|field of study|"
+                              r"disciplines?|studying|students?|b\.s\.|m\.s\.)", re.I)
+
+
+def _accepts_any_engineering(degree_text: str, discipline_vocab) -> bool:
+    """True when 'engineering' is named on its own ("computer science, engineering, or physics"),
+    not just as part of a specific field ("Electrical Engineering")."""
+    if not degree_text:
+        return False
+    rest = " " + " ".join(_TOKEN.findall(degree_text.lower())) + " "
+    for term in discipline_vocab:
+        for phrase in term.phrases:
+            if len(phrase) > 1:
+                rest = rest.replace(f" {' '.join(phrase)} ", " ")
+    # A field name directly before 'engineering' ("Mechanical, Aerospace, or Electrical Engineering")
+    # makes it part of that list, not a general acceptance.
+    rest = re.sub(r" (aerospace|mechanical|electrical|software|civil|chemical|industrial|systems|manufacturing|materials|computer)"
+                  r"( or| and)? engineering ", " ", rest)
+    return " engineering " in rest
+
+
+def _and_list(items) -> str:
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def relevance(title: str, text: str, settings: Settings) -> dict:
     skills_vocab, discipline_vocab = load_vocabulary()
     reasons: list[str] = []
-    tokens = Tokens.of(text)
+    user_disc, user_disc_free = _user_tags(settings.disciplines, discipline_vocab)
 
+    # 1. Role fit, from the title.
+    role = classify_role(title)
+    fields = _and_list(role["fields"]) if role["fields"] else ""
+    if role["kind"] == "non_engineering":
+        role_key = "non_engineering"
+        reasons.append(f"Non-engineering role ({fields.lower()}), so it ranks low. It stays in your list.")
+    elif role["kind"] == "engineering":
+        overlap = sorted(role["disciplines"] & user_disc)
+        if not settings.disciplines:
+            role_key = "any"
+            reasons.append(f"Engineering role: {fields.lower()}.")
+        elif overlap:
+            role_key = "match"
+            reasons.append(f"{fields} role, which fits your {_and_list(overlap)} focus.")
+        else:
+            role_key = "other"
+            reasons.append(f"{fields} role, outside your disciplines ({_and_list(settings.disciplines)}).")
+    elif role["kind"] == "generic":
+        role_key = "generic"
+        reasons.append("General engineering role: the title doesn't name a field.")
+    else:
+        role_key = "unknown"
+        reasons.append("The title doesn't say what kind of role this is.")
+    role_pts = ROLE_POINTS[role_key]
+
+    # 2. Skills: how many of yours the posting mentions. Skills you don't list cost nothing.
+    tokens = Tokens.of(text)
     job_tags = _tags_in(text, skills_vocab, tokens)
     user_tags, user_free = _user_tags(settings.profile.skills, skills_vocab)
-    job_free = [f for f in user_free if tokens.has(_phrase(f))]
-    matched = sorted(set(job_tags) & user_tags) + job_free
+    matched = sorted(set(job_tags) & user_tags) + [f for f in user_free if tokens.has(_phrase(f))]
     missing = sorted(set(job_tags) - user_tags)
-
     if not settings.profile.skills:
-        skill_score = 0.0
-        reasons.append("Add your skills in Settings → Profile to score skill match.")
-    elif not job_tags and not job_free:
-        skill_score = W_SKILLS / 2
-        reasons.append("No recognized skill keywords in the posting; skill match counted as neutral.")
+        skill_pts = 0
+        reasons.append("Add your skills in Resume Studio → Skills to score skill match.")
     else:
-        skill_score = W_SKILLS * len(matched) / max(len(job_tags) + len(job_free), 1)
-        if matched:
-            reasons.append(f"Matches your skills: {', '.join(matched)}.")
+        skill_pts = SKILL_POINTS[min(len(matched), len(SKILL_POINTS) - 1)]
+        reasons.append(f"Mentions your skills: {_and_list(matched)}." if matched else "Mentions none of your skills.")
         if missing:
-            reasons.append(f"Mentions skills not in your profile: {', '.join(missing)}.")
+            reasons.append(f"Also mentions: {_and_list(missing)}.")
 
-    job_disc = _tags_in(text, discipline_vocab, tokens)
-    user_disc, user_disc_free = _user_tags(settings.disciplines, discipline_vocab)
-    disc_match = sorted(set(job_disc) & user_disc) + [d for d in user_disc_free if tokens.has(_phrase(d))]
-    if not settings.disciplines:
-        disc_score = 0.0
-    elif not job_disc and not disc_match:
-        disc_score = W_DISCIPLINE / 2
-        reasons.append("No engineering discipline named; discipline counted as neutral.")
-    elif disc_match:
-        disc_score = float(W_DISCIPLINE)
-        reasons.append(f"Discipline match: {', '.join(disc_match)}.")
+    # 3. Degree fit: majors named in degree sentences.
+    degree_text = " ".join(_rule_sentences(text, _DEGREE_SENTENCE))
+    degree_tokens = Tokens.of(degree_text)
+    named = set(_tags_in(degree_text, discipline_vocab, degree_tokens)) if degree_text else set()
+    named_match = sorted(named & user_disc) + [d for d in user_disc_free if degree_tokens.has(_phrase(d))]
+    if named_match:
+        degree_key = "match"
+    elif _accepts_any_engineering(degree_text, discipline_vocab):
+        degree_key = "any_engineering"
+    elif settings.disciplines and named:
+        degree_key = "other"
     else:
-        disc_score = 0.0
-        reasons.append(f"Disciplines named ({', '.join(job_disc)}) are not among your preferred disciplines.")
+        degree_key = "unknown"
+    if degree_key == "match":
+        reasons.append(f"Asks for {_and_list(named_match)} majors, like yours.")
+    elif degree_key == "any_engineering":
+        reasons.append("Open to engineering majors in general.")
+    elif degree_key == "other":
+        reasons.append(f"Asks for {_and_list(sorted(named))} majors.")
+    degree_pts = DEGREE_POINTS[degree_key]
 
-    return {"score": round(skill_score + disc_score), "reasons": reasons, "matched_skills": matched, "missing_skills": missing}
+    score = role_pts + skill_pts + degree_pts
+    if role["kind"] == "non_engineering":
+        score = min(score, NON_ENGINEERING_CAP)
+    return {"score": score, "reasons": reasons, "matched_skills": matched, "missing_skills": missing,
+            "role": {"kind": role["kind"], "fields": role["fields"]}}
 
 
 def _contains_words(tokens: Tokens, phrase: str) -> bool:
@@ -367,9 +475,9 @@ def preference(opp: dict, text: str, settings: Settings) -> dict:
 def rank(opp: dict, settings: Settings) -> dict:
     text = f"{opp.get('title', '')}\n{opp.get('description', '')}"
     elig = eligibility(text, settings.profile, has_description=bool((opp.get("description") or "").strip()))
-    rel = relevance(text, settings)
+    rel = relevance(opp.get("title", ""), text, settings)
     pref = preference(opp, text, settings)
-    overall = round(W_RELEVANCE * rel["score"] + W_PREFERENCE * pref["score"])
+    overall = round(rel["score"] * (PREFERENCE_FLOOR + (1 - PREFERENCE_FLOOR) * pref["score"] / 100))
     return {"eligibility": elig, "relevance": rel, "preference": pref, "score": overall}
 
 

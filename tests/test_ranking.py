@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from aims import ranking
@@ -131,11 +134,83 @@ def settings(**kw):
                     disciplines=["Aerospace"], **kw)
 
 
-def test_relevance_maps_aliases_and_reports_missing():
-    r = ranking.relevance("Use CATIA and MATLAB for structural analysis in aerospace programs.", settings())
+def test_relevance_components():
+    # Role fit 50 (structures in your Aerospace focus) + skills 24 (two of yours) + degree 20 (asks for aerospace majors).
+    text = "Use CATIA and MATLAB for structural analysis. Pursuing a degree in Aerospace Engineering."
+    r = ranking.relevance("Structures Engineering Intern", text, settings())
     assert "CAD" in r["matched_skills"] and "MATLAB" in r["matched_skills"]
     assert "Structures" in r["missing_skills"]
-    assert r["score"] == round(70 * 2 / 3 + 30)
+    assert r["score"] == 50 + 24 + 20
+    assert r["role"] == {"kind": "engineering", "fields": ["Structures and mechanical design"]}
+
+
+def test_unlisted_skills_cost_nothing():
+    """A posting that lists many skills you don't have isn't penalized for it (it used to score zero)."""
+    few = ranking.relevance("Propulsion Intern", "Uses MATLAB.", settings())
+    many = ranking.relevance("Propulsion Intern", "Uses MATLAB, Simulink, CFD, FEA, LabVIEW, Kalman filter and thermal analysis.", settings())
+    assert few["score"] == many["score"] and "Also mentions" in " ".join(many["reasons"])
+
+
+def test_skill_points_have_diminishing_returns():
+    s = settings()
+    scores = [ranking.relevance("Propulsion Intern", text, s)["score"] for text in
+              ("Nothing.", "MATLAB.", "MATLAB and Python.", "MATLAB, Python and SolidWorks.")]
+    assert [b - a for a, b in zip(scores, scores[1:])] == [15, 9, 6]
+
+
+def test_degree_counts_only_in_degree_sentences():
+    s = settings()
+    boilerplate = ranking.relevance("Propulsion Intern", "We are an aerospace company building rockets.", s)
+    asked = ranking.relevance("Propulsion Intern", "Pursuing a bachelor's degree in aerospace engineering.", s)
+    other = ranking.relevance("Propulsion Intern", "Majors: chemical engineering or chemistry.", s)
+    any_eng = ranking.relevance("Propulsion Intern", "Pursuing a degree in computer science, engineering, or physics.", s)
+    listed = ranking.relevance("Propulsion Intern", "Pursuing a degree in Mechanical or Electrical Engineering.", s)
+    assert asked["score"] - boilerplate["score"] == 10      # match 20 vs unknown 10
+    assert boilerplate["score"] - other["score"] == 10      # unknown 10 vs other majors 0
+    assert any_eng["score"] - boilerplate["score"] == 5     # engineering in general: 15
+    assert listed["score"] == other["score"]                # "...Electrical Engineering" isn't a general acceptance
+
+
+def test_non_engineering_capped_and_preference_cannot_rescue_it():
+    s = settings(preferred_employers=["Rocket Lab"], internship_terms=["Summer 2027"])
+    supply = ranking.rank({"title": "Supply Chain Intern Summer 2027", "employer": "Rocket Lab",
+                           "description": "Use Python and MATLAB. Pursuing a degree in aerospace engineering."}, s)
+    eng = ranking.rank({"title": "Propulsion Test Intern", "employer": "Unknown Co", "description": "Hot fire testing."}, s)
+    assert supply["relevance"]["score"] == ranking.NON_ENGINEERING_CAP
+    assert supply["relevance"]["role"]["kind"] == "non_engineering"
+    assert supply["preference"]["score"] == 70 and eng["preference"]["score"] == 0
+    assert eng["score"] > supply["score"]
+    assert "stays in your list" in supply["relevance"]["reasons"][0]
+
+
+@pytest.mark.parametrize("title,kind,fields", [
+    ("Supplier Quality Engineer Intern", "engineering", ["Manufacturing and quality"]),  # technical beats "supplier"
+    ("2027 Business Operations Engineer Intern", "non_engineering", ["Business and operations"]),  # business beats bare "engineer"
+    ("Site Reliability Internship", "engineering", ["Software"]),  # "reliability" inside "site reliability" doesn't count
+    ("Emerging Talent - Mechanical/Aerospace Engineering Internship", "engineering", None),
+    ("Network Planning Sales Engineer Intern", "non_engineering", None),
+    ("Summer 2027 Engineering Internship/Co-op", "generic", None),
+    ("Working Student, Professional Services", "non_engineering", None),
+    ("Intern", "unknown", []),
+])
+def test_role_classification_precedence(title, kind, fields):
+    role = ranking.classify_role(title)
+    assert role["kind"] == kind
+    if fields is not None:
+        assert role["fields"] == fields
+
+
+def test_role_classification_matches_hand_labels_on_real_titles():
+    """259 real titles from the first discovery run, labeled by hand before the rules were written."""
+    data = json.loads((Path(__file__).parent / "data" / "role_titles.json").read_text(encoding="utf-8"))
+    wrong = [(t["label"], t["title"], ranking.classify_role(t["title"])["kind"]) for t in data["titles"]
+             if (t["label"] == "N") != (ranking.classify_role(t["title"])["kind"] == "non_engineering")]
+    assert wrong == []
+
+
+def test_graduate_in_title_is_not_a_graduation_date():
+    r = ranking.eligibility("Summer 2027 Graduate Engineer Internship/Co-op", Profile(graduation="2028-05"))
+    assert not any(f["rule"] == "graduation" for f in r["findings"])
 
 
 def test_relevance_word_boundaries():
@@ -146,13 +221,13 @@ def test_relevance_word_boundaries():
 
 
 def test_relevance_without_skills_explains():
-    r = ranking.relevance("MATLAB", Settings())
-    assert r["score"] == 0 and "Settings" in r["reasons"][0]
+    r = ranking.relevance("Intern", "MATLAB", Settings())
+    assert any("Resume Studio" in x for x in r["reasons"]) and r["matched_skills"] == []
 
 
 def test_free_text_skill_matches_literally():
     s = Settings(profile=Profile(skills=["Xyzzy Toolkit"]))
-    assert ranking.relevance("Experience with Xyzzy Toolkit required.", s)["matched_skills"] == ["Xyzzy Toolkit"]
+    assert ranking.relevance("Intern", "Experience with Xyzzy Toolkit required.", s)["matched_skills"] == ["Xyzzy Toolkit"]
 
 
 def test_preference_components():
@@ -171,7 +246,7 @@ def test_rank_overall_and_sort_order():
                        s.model_copy(update={"profile": Profile(us_citizen=False)}))
     assert good["eligibility"]["status"] == "eligible" and bad["eligibility"]["status"] == "ineligible"
     assert sorted([bad, good], key=ranking.sort_key)[0] is good
-    assert good["score"] == round(0.6 * good["relevance"]["score"] + 0.4 * good["preference"]["score"])
+    assert good["score"] == round(good["relevance"]["score"] * (0.6 + 0.4 * good["preference"]["score"] / 100))
 
 
 def test_title_counts_for_eligibility():

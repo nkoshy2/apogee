@@ -251,7 +251,8 @@ function rankingSection(r) {
     findings.length ? h("ul", { class: "findings" }, findings) : null,
     h("h4", {}, `Relevance: ${r.relevance.score}/100`), reasons(r.relevance.reasons),
     h("h4", {}, `Preference: ${r.preference.score}/100`), reasons(r.preference.reasons),
-    h("p", { class: "muted" }, `Overall fit ${r.score} = 0.6 × relevance + 0.4 × preference. Sorted by eligibility first.`));
+    h("p", { class: "muted" }, `Overall fit ${r.score} = relevance × (0.6 + 0.4 × preference ÷ 100). `,
+      "Preferences can lift a relevant role, but can't make an irrelevant one rank high. Sorted by eligibility first."));
 }
 
 async function showDetail(id) {

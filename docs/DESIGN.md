@@ -178,14 +178,26 @@ First live run: 16/16 sources complete, 287 student roles out of about 8,300 job
   - A sentence containing "preferred / a plus / desired" makes the rule optional, so it never disqualifies. Negations ("not required", "regardless of") are skipped.
   - `ineligible` only if a mandatory rule is definitely failed. `uncertain` if a mandatory rule cannot be answered from the profile, or if there is no description. Otherwise `eligible`. When no rules are found, the result says so.
   - Degree mismatch disqualifies only with explicit "only" wording. The wording is too varied for anything else.
-- **Relevance (0–100).** 70 points for skills, 30 for discipline.
-  - Skill score = 70 × (job skill tags you have) / (job skill tags). User skills are mapped onto tags through aliases in `aims/data/skills.json`, and unmapped skills are matched literally.
-  - Phrases are matched as whole token sequences, so "ros" doesn't match inside "across".
-  - When the posting has no recognized tags, skills count as neutral (35).
+- **Relevance (0–100)** = role fit + skills + degree fit (retuned 2026-10-27, D16):
+  - **Role fit (max 50), from the title.** `roles` in `aims/data/skills.json` maps title phrases to fields such as Propulsion, Structures, GNC, Test, Electrical/RF, Software, Civil, and Chemistry/bio, each with its disciplines.
+    - Points: 50 if a field matches your disciplines; 40 for a general engineering title, or any engineering role when you set no disciplines; 20 for engineering in another discipline, or an unclear title.
+    - Precedence: a technical field beats a business match ("Supplier Quality Engineer"), and a business match beats the bare word "engineer" ("Business Operations Engineer"). An alias inside a longer matched alias doesn't count.
+    - Non-engineering roles (supply chain, finance, people, security analyst, government operations…) are capped at 10 relevance. They are labeled and sorted low, never hidden.
+  - **Skills (max 30):** 0 / 15 / 24 / 30 for 0 / 1 / 2 / 3+ of your skills mentioned. Skills you don't list cost nothing (they're shown as "also mentions"). Matching is by whole tokens, so "ros" doesn't match inside "across".
+  - **Degree fit (max 20):** majors named in sentences about degrees only, so "an aerospace company" doesn't count.
+    - Points: 20 if they include yours; 15 if the sentence accepts engineering in general; 10 if no major is named; 0 if only other majors are named.
 - **Preference (0–100).** Employer 40, location 30, term 30.
-- **Overall:** 0.6 × relevance + 0.4 × preference. Lists sort by eligibility group, then by overall score. Ineligible items are labeled and sorted lower, never hidden or deleted.
-- **Performance:** about 1 ms per posting cold (2,000 postings ≈ 2 s). Results are memoized in memory on the exact inputs they read, so repeat views take about 0.1 s.
-- **Interim:** profile skills are typed in Settings for now. Phase 3 adds skills from verified experience records.
+- **Overall:** relevance × (0.6 + 0.4 × preference / 100). Preference scales relevance instead of adding to it, so a preferred employer lifts a relevant role but can't make an irrelevant one rank high. Lists sort by eligibility group, then by overall score.
+- **Quality check:** 287 real postings from the first discovery run, hand-labeled by title before tuning.
+
+  | Metric | Before | After |
+  |---|---|---|
+  | Engineering above non-engineering | 51.8% | 99.3% |
+  | Relevant above other engineering | 53.3% | 95.1% |
+  | Non-engineering in top 50 | 16 | 0 |
+
+  The 259 unique labeled titles are a regression test (`tests/data/role_titles.json`).
+- **Performance:** about 1.6 ms per posting cold (2,000 postings ≈ 3 s). Results are memoized on their exact inputs, so repeat views take about 0.1 s.
 
 ## 8. Resume generation (Phase 3, Done)
 
