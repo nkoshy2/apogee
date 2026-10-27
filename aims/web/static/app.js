@@ -1046,6 +1046,132 @@ async function syncOnOpen() {
   } catch { /* the page's own requests report connection problems */ }
 }
 
+// ---------------------------------------------------------------- backups
+
+const BACKUP_KIND = { auto: "Daily", manual: "Manual", "pre-restore": "Safety copy", imported: "Imported" };
+
+const localTime = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+const megabytes = (n) => (n < 1e6 ? `${Math.max(1, Math.round(n / 1e3))} KB` : `${(n / 1e6).toFixed(1)} MB`);
+
+async function loadBackups() {
+  let st;
+  try {
+    st = await api("GET", "/api/backups");
+  } catch (err) {
+    banner(err.message);
+    return;
+  }
+  const newest = st.newest;
+  const last = st.last_attempt;
+  fill(document.getElementById("bk-lede"),
+    newest ? `Last backup ${ago(newest.created_at)}. ` : "No backups yet. ",
+    newest ? (st.changed_since_newest ? "You've made changes since, so the next daily backup will include them. "
+                                      : "Nothing has changed since. ") : "",
+    `${plural(st.backups.length, "backup", "backups")} kept.`,
+    last && last.mirror ? (last.mirror.status === "ok" ? " Mirror copy: up to date." : h("strong", { class: "attention-text" }, " Mirror copy failed.")) : "");
+  fill(document.getElementById("bk-alert"), last && last.status === "failed"
+    ? h("p", { class: "notice critical" }, `The last backup attempt (${ago(last.at)}) failed: ${last.error} Your data and existing backups were not changed.`)
+    : last && last.mirror && last.mirror.status === "failed" ? h("p", { class: "notice" }, last.mirror.error) : null);
+
+  document.querySelector("#bk-table tbody").replaceChildren(...st.backups.map((b) => h("tr", {},
+    h("td", {}, h("strong", {}, b.readable ? localTime(b.created_at) : b.name),
+      h("span", { class: "sub" }, b.readable ? `${BACKUP_KIND[b.kind] || b.kind} · ${megabytes(b.size)}` : `Unreadable: ${b.error}`)),
+    h("td", { class: "small" }, b.readable ? `Database and ${plural(b.documents, "resume", "resumes")}` : ""),
+    h("td", { class: "row" },
+      h("button", { class: "ghost", onclick: () => verifyBackup(b.name) }, "Verify"),
+      b.readable ? h("button", { class: "ghost", onclick: () => askRestore(b) }, "Restore") : null))));
+}
+
+async function backupNow() {
+  await busy(document.getElementById("bk-now"), "Backing up…", async () => {
+    try {
+      const r = await api("POST", "/api/backups");
+      const mirrorFailed = r.mirror && r.mirror.status === "failed";
+      banner(`Backup saved and verified (${megabytes(r.size)}).` + (mirrorFailed ? " The mirror copy failed; see Backups." : ""),
+        mirrorFailed ? "error" : "ok");
+    } catch (err) {
+      banner(err.message);
+    }
+    loadBackups();
+  });
+}
+
+async function verifyBackup(name) {
+  try {
+    const r = await api("POST", `/api/backups/${encodeURIComponent(name)}/verify`);
+    banner(`Verified: all ${r.files} files match their checksums, and the database passed its integrity check.`, "ok");
+  } catch (err) {
+    banner(err.message);
+  }
+}
+
+function askRestore(b, newer) {
+  const box = document.getElementById("bk-restore");
+  const understood = h("input", { type: "checkbox" });
+  const go = h("button", { disabled: !!newer, onclick: () => doRestore(b, !!newer) }, newer ? "Restore anyway" : "Restore this backup");
+  understood.addEventListener("change", () => (go.disabled = !understood.checked));
+  fill(box,
+    h("h3", {}, `Restore the backup from ${localTime(b.created_at)}?`),
+    h("p", {}, "Your opportunities, applications, experience, settings and resumes go back to how they were then. ",
+      "Apogee first saves a safety copy of your current data, so you can undo this by restoring that copy."),
+    newer ? [
+      h("p", { class: "notice critical" }, `You've made ${plural(newer.changes_since || 1, "change", "changes")} since this backup (most recently ${ago(newer.live_changed_at)}). Restoring will undo ${(newer.changes_since || 1) === 1 ? "it" : "them"}.`),
+      h("label", { class: "check" }, understood, "I understand. Replace my newer changes (they stay in the safety copy)."),
+    ] : null,
+    h("div", { class: "row wrap" }, go, h("button", { class: "secondary", onclick: () => (box.hidden = true) }, "Cancel")));
+  box.hidden = false;
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function doRestore(b, allowNewer) {
+  try {
+    const r = await api("POST", `/api/backups/${encodeURIComponent(b.name)}/restore`, { confirm: b.name, allow_newer: allowNewer });
+    try {
+      sessionStorage.setItem("apogee-restored", `Restored the backup from ${localTime(b.created_at)}. Safety copy of your previous data: ${r.safety_backup}.`);
+    } catch { /* storage unavailable: the reload still shows the restored data */ }
+    location.reload(); // everything on screen changed
+  } catch (err) {
+    if (err.status === 409 && err.data && err.data.newer) askRestore(b, err.data.newer);
+    else banner(err.message);
+  }
+}
+
+async function importBackupFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const res = await fetch("/api/backups/import", {
+      method: "POST", headers: { "X-AIMS-Request": "1", "Content-Type": "application/zip" }, body: file });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(describeError(data) || `Upload failed (${res.status})`);
+    banner("Backup file checked and added. Review it before restoring.", "ok");
+    await loadBackups();
+    askRestore({ name: data.name, created_at: data.created_at });
+  } catch (err) {
+    banner(err.message);
+  } finally {
+    ev.target.value = "";
+  }
+}
+
+// Failures must be visible: if the last backup attempt failed, say so on whatever page is open.
+async function checkBackupHealth() {
+  try {
+    const restored = sessionStorage.getItem("apogee-restored");
+    if (restored) {
+      sessionStorage.removeItem("apogee-restored");
+      banner(restored, "ok");
+      return;
+    }
+  } catch { /* storage unavailable */ }
+  try {
+    const st = await api("GET", "/api/backups");
+    if (st.last_attempt && st.last_attempt.status === "failed") {
+      banner(`The last backup failed (${ago(st.last_attempt.at)}): ${st.last_attempt.error} Check Settings → Backups.`);
+    }
+  } catch { /* the page's own requests report connection problems */ }
+}
+
 // ---------------------------------------------------------------- settings
 
 function setupSettingsForm() {
@@ -1064,6 +1190,7 @@ async function loadSettings() {
     form.elements.backup_mirror_dir.value = s.backup_mirror_dir;
     form.elements.discovery_feed_url.value = s.discovery_feed_url;
     loadDiscovery();
+    loadBackups();
     const p = s.profile;
     for (const f of TRISTATE_FIELDS) form.elements[f].value = p[f] === null ? "" : String(p[f]);
     form.elements.degree_level.value = p.degree_level || "";
@@ -1143,9 +1270,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("disc-run").addEventListener("click", runDiscovery);
   document.getElementById("disc-sync").addEventListener("click", () => syncCloud(false));
   document.getElementById("disc-file").addEventListener("change", importFeedFile);
+  document.getElementById("bk-now").addEventListener("click", backupNow);
+  document.getElementById("bk-file").addEventListener("change", importBackupFile);
   setupSettingsForm();
   document.getElementById("settings-form").addEventListener("submit", submitSettings);
   document.getElementById("shutdown").addEventListener("click", shutdown);
   showTab();
   syncOnOpen();
+  checkBackupHealth();
 });

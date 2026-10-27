@@ -14,7 +14,7 @@ applications. It runs entirely on this computer, costs nothing to operate, and n
 | 2. Opportunity management, ranking, application tracking | **Done**: tests pass |
 | 3. Resume generation (experience database, LaTeX, PDF preview/export) | **Done**: tests pass |
 | 4. Automated discovery (Greenhouse, Lever) | **Done**: tests pass. Local runs work; the twice-daily cloud run needs the repo pushed to GitHub |
-| 5. Backups and recovery | Not started. Only pre-migration snapshots exist so far |
+| 5. Backups and recovery | **Done**: tests pass (daily, verified, 30-day retention, mirror, safe restore) |
 | 6. End-to-end validation | Not started |
 
 ## Setup (once)
@@ -28,7 +28,7 @@ to the desktop. Double-click the shortcut to start the app (or reuse it if it is
 
 ## Where data lives
 
-`%LOCALAPPDATA%\AIMS\` holds the database, logs, and backups. It is never stored in this repository.
+`%LOCALAPPDATA%\AIMS\` holds the database, logs, and backups (`backups\`, one verified zip per day, kept 30 days). It is never stored in this repository.
 Generated resumes are kept under `documents\`, one folder per resume, never overwritten.
 Resume generation needs a LaTeX install (MiKTeX, free). Apogee calls `pdflatex` directly.
 Overrides: `AIMS_DATA_DIR`, `AIMS_PORT` (default 8765).

@@ -8,6 +8,7 @@ defined `Conn` dependency annotation at definition time.
 
 import json
 import sqlite3
+import uuid
 from pathlib import Path
 from typing import Annotated, Iterator, Literal
 
@@ -16,7 +17,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from aims import APP_ID, __version__, applications, db, experience, opportunities, settings_store, summary
+from aims import APP_ID, __version__, applications, backup, db, experience, opportunities, settings_store, summary
 from aims.config import Config
 from aims.discovery import importer
 from aims.resume import service as resume_service
@@ -28,6 +29,14 @@ STATIC_DIR = Path(__file__).parent / "static"
 class ImportIn(BaseModel):
     format: Literal["csv", "json"]
     content: str = Field(max_length=5_000_000)
+
+
+MAX_BACKUP_UPLOAD = 2_000_000_000
+
+
+class RestoreRequest(BaseModel):
+    confirm: str  # must equal the backup name: a deliberate, explicit confirmation
+    allow_newer: bool = False
 
 
 class FeedUpload(BaseModel):
@@ -298,6 +307,59 @@ def create_app(config: Config) -> FastAPI:
         try:
             return importer.import_feed(conn, json.loads(body.content), origin="file")
         except ValueError as exc:  # includes FeedError and JSON errors
+            raise HTTPException(422, str(exc))
+
+    # ---- backups
+
+    @app.get("/api/backups")
+    def backup_status(conn: Conn):
+        return backup.status(conn, config)
+
+    @app.post("/api/backups", status_code=201)
+    def create_backup(conn: Conn):
+        try:
+            return backup.create(conn, config, "manual", settings_mirror=settings_store.load(conn).backup_mirror_dir)
+        except backup.BackupError as exc:
+            raise HTTPException(500, str(exc))
+
+    @app.post("/api/backups/import", status_code=201)
+    async def import_backup(request: Request):
+        """Upload a backup file (e.g. from an external drive). Streamed to disk, then fully verified."""
+        config.tmp_dir.mkdir(parents=True, exist_ok=True)
+        tmp = config.tmp_dir / f"upload-{uuid.uuid4().hex}.zip"
+        size = 0
+        try:
+            with open(tmp, "wb") as f:
+                async for chunk in request.stream():
+                    size += len(chunk)
+                    if size > MAX_BACKUP_UPLOAD:
+                        raise HTTPException(413, "That file is too large to be an Apogee backup.")
+                    f.write(chunk)
+            return backup.import_file(config, tmp)
+        except backup.BackupError as exc:
+            raise HTTPException(422, str(exc))
+        finally:
+            tmp.unlink(missing_ok=True)
+
+    @app.post("/api/backups/{name}/verify")
+    def verify_backup(name: str):
+        try:
+            path = backup._resolve(config, name)
+            manifest = backup.verify(path)
+        except backup.BackupError as exc:
+            raise HTTPException(422, str(exc))
+        return {"name": name, "ok": True, "created_at": manifest["created_at"], "files": len(manifest["files"])}
+
+    @app.post("/api/backups/{name}/restore")
+    def restore_backup(name: str, body: RestoreRequest, conn: Conn):
+        if body.confirm != name:
+            raise HTTPException(400, "Restore not confirmed: send the backup's name as 'confirm'.")
+        try:
+            return backup.restore(conn, config, name, allow_newer=body.allow_newer,
+                                  settings_mirror=settings_store.load(conn).backup_mirror_dir)
+        except backup.NewerDataError as exc:
+            return JSONResponse({"detail": str(exc), "newer": exc.details}, status_code=409)
+        except backup.BackupError as exc:
             raise HTTPException(422, str(exc))
 
     # ---- server

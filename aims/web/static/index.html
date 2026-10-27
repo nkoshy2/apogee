@@ -349,6 +349,23 @@
         </table>
         <p class="meta">Apogee reads only public job boards and keeps student roles (internships and co-ops). A source that fails or returns a partial list never closes anything: postings are marked "not seen" only after a complete, successful check. To add or pause a source, edit <code>aims/discovery/sources.json</code>.</p>
       </div>
+      <div class="panel" id="backup-panel">
+        <div class="row spread wrap">
+          <h2>Backups</h2>
+          <div class="row wrap">
+            <button type="button" id="bk-now">Back up now</button>
+            <label class="file-button">Restore from a file<input id="bk-file" type="file" accept=".zip,application/zip"></label>
+          </div>
+        </div>
+        <p class="lede small-lede" id="bk-lede"></p>
+        <div id="bk-alert"></div>
+        <div id="bk-restore" class="restore-box" hidden></div>
+        <table id="bk-table">
+          <thead><tr><th>Backup</th><th>Contents</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="meta">Apogee backs up once a day while it's open (and catches up after days it was closed), keeps 30 days, and always keeps the newest backup. Each one holds your database, every generated resume, and checksums, and is verified before it's kept. Set a backup mirror folder above, for example an external drive or OneDrive, to keep a second copy off this disk.</p>
+      </div>
       <div class="panel tinted">
         <h2>System</h2>
         <dl id="health"></dl>

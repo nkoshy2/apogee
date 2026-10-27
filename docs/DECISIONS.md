@@ -111,3 +111,19 @@ Measured on the same hand-labeled postings (labels written before any rule chang
 
 The labeled titles are kept as a regression test. A graduation rule that misread "Graduate Engineer
 Internship" as a date requirement was fixed at the same time.
+
+## D17: Change tracking by triggers, compared by counter and time (2026-10-27)
+Restore must never silently overwrite newer work. That needs a reliable notion of "changed since the
+backup", and file times aren't reliable. Triggers on every user-data table bump a counter and a timestamp
+in `meta`. Both are compared, because timestamps have one-second resolution (a test caught an edit made in
+the same second as the backup). The comparison errs toward asking: a backup from another install may
+prompt for confirmation even when nothing is lost.
+
+## D18: Restore copies in with the SQLite backup API (2026-10-27)
+Swapping database files under a running server risks WAL mismatches and half-replaced state. The backup
+API copies page by page into the live database under its own lock, so readers see either the old data or
+the new. A verified safety backup is always taken first, so every restore can be undone.
+
+## D19: UI files are revalidated on every load (2026-10-27)
+Static files had no cache header, so a browser could keep showing an old UI after an update. They now send
+`Cache-Control: no-cache`. That costs one cheap 304 check per file against a local server.

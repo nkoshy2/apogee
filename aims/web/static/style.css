@@ -339,3 +339,11 @@ label.file-button {
 label.file-button:hover { background: var(--color-neutral-200); }
 label.file-button:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 label.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* ---------------------------------------------------------------- backups */
+
+.notice.critical { background: var(--color-accent-100); color: var(--color-accent-800); box-shadow: inset 0 0 0 1px var(--color-accent-300); }
+.restore-box { margin: 0 0 16px; padding: 16px 20px; border-radius: 24px; background: var(--color-bg); }
+.restore-box h3 { margin-bottom: 6px; }
+#bk-table td.row { justify-content: flex-end; }
+#bk-table tbody tr { cursor: default; }

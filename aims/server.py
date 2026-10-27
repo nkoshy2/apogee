@@ -66,6 +66,9 @@ def main() -> int:
             from aims.web.app import create_app
 
             app = create_app(config)
+            from aims.backup import start_scheduler
+
+            start_scheduler(config)  # daily backups, with catch-up shortly after start
             server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=config.port, log_level="info"))
             app.state.server = server
             log.info("Starting Apogee on %s (data: %s)", config.base_url, config.data_dir)

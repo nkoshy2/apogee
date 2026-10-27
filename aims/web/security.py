@@ -44,4 +44,7 @@ def install(app: FastAPI, port: int) -> None:
         response.headers.update(SECURITY_HEADERS)
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+        else:
+            # Revalidate the UI files on every load, so an Apogee update is never hidden by the cache.
+            response.headers.setdefault("Cache-Control", "no-cache")
         return response

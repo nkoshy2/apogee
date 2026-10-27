@@ -55,7 +55,7 @@ aims/
                      compile+validate, service.py generate+store, template.tex [Done]
   discovery/         model, greenhouse, lever, run, publish (cloud-safe, stdlib only);
                      importer (local), sources.json                    [Done]
-  backup.py          create/verify/retain/restore                        [Planned P5]
+  backup.py          create/verify/retain/mirror/restore/import, scheduler [Done]
   web/               FastAPI app, security middleware, static frontend   [Done]
   server.py          single-instance lock + uvicorn                      [Done]
 launcher.pyw         shortcut target: start-or-reuse server, open browser [Done]
@@ -100,9 +100,13 @@ SQLite, WAL, `foreign_keys=ON`, `synchronous=FULL`. Timestamps are UTC ISO-8601 
 - `imported_feed_runs(run_id PK, origin, generated_at, imported_at, summary_json)`.
 - `opportunity_snapshots(opportunity_id, fetched_at, content_sha256, data_json)`, written only when a posting's content changes.
 
+**0005 (Done)**
+
+- `meta(id = 1, data_revision, changed_at)`, plus AFTER INSERT/UPDATE/DELETE triggers on every user-data table (39 triggers).
+
 **Planned**
 
-- P5: `meta(data_revision)` plus triggers.
+- (None outstanding.)
 
 ## 5. Local HTTP API
 
@@ -126,7 +130,7 @@ All endpoints are under `/api`. JSON only. Mutations require the header `X-AIMS-
 | `GET /api/resumes[?opportunity_id=]`, `GET /api/resumes/{id}`, `GET /api/resumes/{id}/pdf\|tex[?download=true]` | Done |
 | `POST /api/shutdown` | Done |
 | `GET /api/discovery/health`, `POST /api/discovery/run` (check boards from here), `POST /api/discovery/sync` (import cloud runs), `POST /api/discovery/import` (feed file) | Done |
-| `/api/backups` (list/create/verify/restore) | P5 |
+| `GET/POST /api/backups`, `POST /api/backups/import` (upload), `POST /api/backups/{name}/verify`, `POST /api/backups/{name}/restore` (`confirm` = name, `allow_newer`) | Done |
 
 ## 6. Discovery (Phase 4, Done; cloud schedule awaiting repo hosting)
 
@@ -213,19 +217,36 @@ First live run: 16/16 sources complete, 287 student roles out of about 8,300 job
    - Warnings only: any statement that can't be read back, and `Overfull \hbox` > 2pt.
 6. **Store:** copy into a new `documents/<timestamp-uuid>/` folder, then insert the immutable row (content snapshot, template name+hash, file hashes, statement links). If the insert fails, the folder is removed. Failed generations store nothing and leave earlier resumes untouched.
 
-## 9. Backup format (Phase 5)
+## 9. Backups and recovery (Phase 5, Done)
 
-`backups/aims-YYYYMMDD-HHMMSS.zip`, written as `*.partial` first, then verified, then renamed:
+`aims/backup.py`. One zip per backup, `backups/aims-YYYYMMDD-HHMMSS-<kind>.zip` (kind: auto, manual, pre-restore, imported):
 
 ```
-manifest.json   {format:1, created_at, app_version, schema_version, data_revision,
-                 files: [{path, sha256, size}]}
-aims.db         (sqlite3 backup API snapshot; PRAGMA integrity_check passes)
-documents/...   generated resumes
-config/...      user-editable config (template, skills vocabulary)
+manifest.json          {format: 1, kind, created_at, app_version, schema_version, data_revision, changed_at,
+                        template_version, files: [{path, sha256, size}]}
+aims.db                consistent snapshot via the SQLite backup API (never a copy of the live file)
+documents/<id>/...     every generated resume (.tex, .pdf, .log)
+reference/...          copies of template.tex and skills.json, for reference (not restored)
 ```
 
-Excluded: logs, lock files, temp files, any tokens. Retention: delete backups older than 30 days, but only after a newer verified backup exists, and always keep the newest verified one. An optional mirror copy goes to a user-set folder (external drive or OneDrive). Restore: verify the archive, take a pre-restore backup, check `data_revision`, confirm, then swap the DB atomically.
+- **Create:** snapshot, then zip to `*.partial`, then verify (manifest matches contents, every SHA-256, `PRAGMA integrity_check`, schema version), then rename.
+  - Any failure, including Ctrl-C or shutdown, removes the partial file and leaves the live database and existing backups untouched.
+  - Stale `.partial` files from a killed run are cleared before the next backup.
+  - Logs, locks, temp files and tokens are never included.
+- **Change tracking** (migration 0005): triggers on all 13 user-data tables bump `meta.data_revision` and `meta.changed_at`. A test fails if a new table lacks them.
+- **Schedule:** a background thread in the server checks 15 s after start, then hourly. A backup is due when the newest one is over 24 h old *and* data changed since. This catches up after days the app was closed, with no Windows Task Scheduler (R7).
+- **Retention:** runs only right after a successful, verified backup. It deletes backups older than 30 days but always keeps the newest readable one, and never deletes unreadable files.
+- **Mirror:** an optional copy to `backup_mirror_dir` (external drive, OneDrive), written as `.partial`, checksum-compared, then renamed. A mirror failure is reported but doesn't fail the backup. The mirror is pruned in step with local retention.
+- **Restore** (a typed confirmation is required):
+  1. Verify the archive. Backups from a newer schema are refused.
+  2. Refuse if live data changed since the backup, unless the user explicitly allows it. "Changed" means `changed_at` is later *or* `data_revision` differs; the counter catches edits in the same second as the backup.
+  3. Take a verified `pre-restore` safety backup. If that fails, nothing else happens.
+  4. Copy the snapshot into the live database with the SQLite backup API, under its lock, with no file swapping.
+  5. Run the integrity check and migrate an older backup's schema forward.
+  6. Add missing resume files; existing ones are never overwritten (they're immutable).
+- **Import:** "Restore from a file" uploads a backup from another drive or computer. It's streamed to disk, verified in full, kept as `-imported.zip`, then restored through the same path.
+- **Visibility:** every attempt is appended to `backups/backup-log.jsonl`, which sits outside the database so a restore can't erase it. A failed attempt shows in Settings → Backups and as a banner on whatever page is open.
+- **Spec 7 recovery tests** (`tests/test_backup.py`): normal backup, backup during an open write transaction, interrupted backup, disk-full and permission failures, missed schedules and catch-up, four kinds of corruption, full restore (including after restart and from an older schema), restore from an off-device copy on a fresh install, retention, and restoring over newer records. All pass.
 
 ## 10. External dependencies requiring validation
 
@@ -290,7 +311,7 @@ Each task leaves the app working and tested.
 6. Importer
 7. Source health UI
 
-**Phase 5: Reliability and recovery**
+**Phase 5: Reliability and recovery (Done)**
 1. Revision triggers
 2. Backup create/verify
 3. Schedule plus retention
