@@ -15,7 +15,7 @@ applications. It runs entirely on this computer, costs nothing to operate, and n
 | 3. Resume generation (experience database, LaTeX, PDF preview/export) | **Done**: tests pass |
 | 4. Automated discovery (Greenhouse, Lever) | **Done**: tests pass. Local runs work; the twice-daily cloud run needs the repo pushed to GitHub |
 | 5. Backups and recovery | **Done**: tests pass (daily, verified, 30-day retention, mirror, safe restore) |
-| 6. End-to-end validation | Not started |
+| 6. End-to-end validation | **Done** for everything testable now ([docs/VALIDATION.md](docs/VALIDATION.md)). The 2-week cloud observation and timing your own applications are still to do |
 
 ## Setup (once)
 

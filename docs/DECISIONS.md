@@ -127,3 +127,15 @@ the new. A verified safety backup is always taken first, so every restore can be
 ## D19: UI files are revalidated on every load (2026-10-27)
 Static files had no cache header, so a browser could keep showing an old UI after an update. They now send
 `Cache-Control: no-cache`. That costs one cheap 304 check per file against a local server.
+
+## D20: Term-labelled titles count as student roles (2026-10-27)
+Validation against the public boards found that Astranis posts 12-week internships for recent graduates
+as "<Role> Associate (Summer 2027)", with no word "intern". A title with a season and year term now counts as
+a student role. Full-time "New Grad" and "Early Career" roles stay excluded. Adding them is a scope decision
+left to the user (docs/VALIDATION.md).
+
+## D21: Resume tailoring weighs the job's title and the best evidence (2026-10-27)
+End-to-end validation showed resumes barely changed between jobs. A thermal internship whose description
+also mentioned Python, CAD and testing led with rocketry work, because many weak keyword matches outscored
+two strong ones. Keywords in the job title now score 25 instead of 10. An entry scores 1 / 0.5 / 0.25 times its
+best three statements instead of their sum, and a section ranks by its best entry.

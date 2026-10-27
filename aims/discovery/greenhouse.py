@@ -12,7 +12,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 
 from aims.discovery.model import (
-    FetchError, HttpGet, Posting, SourceCheck, classify, clean_text, html_to_text, http_get_json,
+    LOCATION_LIMIT, FetchError, HttpGet, Posting, SourceCheck, classify, clean_text, html_to_text, http_get_json,
     is_student_role, iso_date, raw_hash,
 )
 
@@ -30,7 +30,7 @@ def _posting(key: str, job: dict) -> Posting:
         source_posting_id=str(job["id"]),
         title=title,
         url=url[:2000],
-        location=clean_text((job.get("location") or {}).get("name"), 300),
+        location=clean_text((job.get("location") or {}).get("name"), LOCATION_LIMIT),
         opportunity_type=classify(title, labels),
         description=html_to_text(str(job.get("content") or "")),
         deadline=iso_date(job.get("application_deadline")),

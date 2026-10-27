@@ -298,3 +298,20 @@ def test_attach_resume_to_application(client):
     # Re-sending the same value adds no history noise.
     n = len(got["events"])
     assert len(client.patch(f"/api/applications/{app['id']}", json={"resume_document_id": doc["id"]}).json()["events"]) == n
+
+
+def test_job_title_topic_leads_the_resume(client):
+    """Regression from validation: a thermal internship listing many other topics should still lead
+    with thermal work, not with the entry that matches the most keywords."""
+    client.put("/api/settings", json={"resume_header": {"name": "T"}})
+    club = client.post("/api/experiences", json={"kind": "employment", "title": "Rocket Club", "start_date": "2025-01"}).json()
+    for text in ("Wrote Python scripts for test data", "Designed fluid plumbing in a CAD tool", "Ran static fire testing"):
+        approve(client, club["id"], text)
+    lab = client.post("/api/experiences", json={"kind": "research", "title": "Thermal Lab", "start_date": "2024-01"}).json()
+    approve(client, lab["id"], "Built a thermal model in MATLAB")
+    opp = client.post("/api/opportunities", json={"employer": "E", "title": "Thermal Engineering Intern", "url": "https://e.example/t",
+        "description": "Thermal analysis with MATLAB. Also Python, testing, CAD and fluid systems."}).json()
+    p = plan(client, opportunity_id=opp["id"])
+    middle = [s["title"] for s in p["sections"] if s["kind"] in ("employment", "research")]
+    assert middle == ["Research", "Experience"]
+

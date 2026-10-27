@@ -8,7 +8,7 @@ check incomplete rather than failed.
 from __future__ import annotations
 
 from aims.discovery.model import (
-    FetchError, HttpGet, Posting, SourceCheck, classify, clean_text, html_to_text, http_get_json,
+    LOCATION_LIMIT, FetchError, HttpGet, Posting, SourceCheck, classify, clean_text, html_to_text, http_get_json,
     is_student_role, raw_hash,
 )
 
@@ -35,7 +35,7 @@ def _posting(key: str, p: dict) -> Posting:
         source_posting_id=str(p["id"]),
         title=title,
         url=url[:2000],
-        location=clean_text(" / ".join(map(str, locations)), 300),
+        location=clean_text(" / ".join(map(str, locations)), LOCATION_LIMIT),
         opportunity_type=classify(title, labels),
         description=_description(p),
         source_api_url=f"{API}/{key}/{p['id']}",

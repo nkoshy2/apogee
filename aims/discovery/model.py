@@ -111,17 +111,28 @@ def raw_hash(record: object) -> str:
     return hashlib.sha256(json.dumps(record, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
+# A season-and-year term in the title marks a fixed-term internship even when the title doesn't say
+# "intern": e.g. Astranis' "Thermal Associate Engineer (Summer 2027)" is a 12-week internship for
+# recent graduates (found by validation against the public boards, docs/validation/).
+TERM_LABEL = re.compile(r"\b(spring|summer|fall|autumn|winter)(\s*[/&,]\s*(spring|summer|fall|autumn|winter))*\s+20\d\d\b", re.I)
+
+
 def is_student_role(title: str, labels: list[str] = ()) -> bool:
-    return bool(STUDENT_ROLE.search(title)) or any(STUDENT_ROLE.search(l or "") for l in labels)
+    return (bool(STUDENT_ROLE.search(title)) or bool(TERM_LABEL.search(title))
+            or any(STUDENT_ROLE.search(l or "") for l in labels))
 
 
 def classify(title: str, labels: list[str] = ()) -> str:
     return "co-op" if CO_OP.search(title) or any(CO_OP.search(l or "") for l in labels) else "internship"
 
 
+LOCATION_LIMIT = 1000  # multi-site postings list many cities; 300 characters cut some off (found in validation)
+
+
 def clean_text(value: object, limit: int) -> str:
+    """Collapse whitespace and cap length. A cut is marked with an ellipsis, never silent."""
     text = re.sub(r"[ \t\r\f\v]+", " ", str(value or "")).strip()
-    return text[:limit]
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
 
 
 class _TextExtractor(HTMLParser):

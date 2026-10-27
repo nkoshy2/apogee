@@ -86,6 +86,11 @@ def test_student_role_filter_and_type():
     assert model.is_student_role("Engineer", ["Intern"])
     assert not model.is_student_role("Internal Tools Engineer")
     assert not model.is_student_role("Apprentice Controls Technician")
+    # Fixed-term roles labelled with a season and year are internships even without the word.
+    assert model.is_student_role("Thermal Associate Engineer (Summer 2027)")
+    assert model.is_student_role("Propulsion Engineer - Spring/Summer 2027")
+    assert not model.is_student_role("Electrical Engineer I - New Grad (BOS)")
+    assert not model.is_student_role("Program Manager, starts 2027")
     assert model.classify("Software Co-op") == "co-op" and model.classify("GNC Intern") == "internship"
 
 
@@ -393,3 +398,13 @@ def test_api_import_file(client):
     assert client.post("/api/discovery/import", json={"content": "{not json"}).status_code == 422
     health = client.get("/api/discovery/health").json()
     assert health["runs_imported"] == 1
+
+
+def test_long_multi_site_locations_are_kept_whole():
+    """Regression from validation: 300-character locations silently dropped the last cities."""
+    cities = "; ".join(f"City {i}, State, United States" for i in range(25))  # ~800 characters
+    responses = gh_board("acme", [{"id": 1, "title": "Intern"}])
+    responses[f"{GH}/acme/jobs/1"]["location"] = {"name": cities}
+    [p] = greenhouse.fetch("acme", "Acme", fake_http(responses)).postings
+    assert p.location == cities
+    assert model.clean_text("x" * 1200, model.LOCATION_LIMIT).endswith("…")  # a cut is visible, never silent

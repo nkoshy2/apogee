@@ -51,7 +51,7 @@ class PostingIn(BaseModel):
     source_posting_id: Text(200, 1)
     title: Text(300, 1)
     url: Text(2000, 1)
-    location: Text(300) = ""
+    location: Text(1000) = ""
     opportunity_type: Literal["internship", "co-op", "government", "research", "full-time", "other"] = "internship"
     description: Annotated[str, StringConstraints(max_length=100_000)] = ""
     deadline: dt.date | None = None

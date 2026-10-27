@@ -320,7 +320,7 @@ Each task leaves the app working and tested.
 6. Recovery test suite
 7. Backup UI
 
-**Phase 6: End-to-end validation**
+**Phase 6: End-to-end validation (Done except the 2-week observation and real-use timing; see docs/VALIDATION.md)**
 1. Ten-opportunity walkthrough
 2. Discovery metrics against verified snapshots
 3. Two-week observation log

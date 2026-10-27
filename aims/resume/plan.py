@@ -1,7 +1,10 @@
 """Choose and order resume content for a job. Deterministic; uses only approved statements.
 
 Scoring reuses the ranking vocabulary: a statement earns 10 points per skill or discipline
-tag it shares with the posting, plus up to 5 points for other shared significant words.
+tag it shares with the posting (25 if the tag is in the job's title, since that's what the job
+is about), plus up to 5 points for other shared significant words. An entry scores like its
+best statements (weights 1, 0.5, 0.25) rather than their sum, and a section ranks by its best
+entry, so two strong bullets beat four weak ones.
 
 Ordering rules:
 - Education first and Skills last; the sections in between are ordered by relevance.
@@ -70,11 +73,17 @@ def _tags(text: str, extra: list[str] = ()) -> set[str]:
     return tags
 
 
+TAG_POINTS, TITLE_TAG_POINTS = 10, 25  # a topic in the job's title is what the job is about
+ENTRY_WEIGHTS = (1.0, 0.5, 0.25)        # an entry is as strong as its best evidence, not its bullet count
+
+
 class Job:
     def __init__(self, opportunity: dict | None):
-        text = f"{opportunity['title']}\n{opportunity.get('description') or ''}" if opportunity else ""
+        title = opportunity["title"] if opportunity else ""
+        text = f"{title}\n{opportunity.get('description') or ''}" if opportunity else ""
         self.present = bool(opportunity)
         self.tags = _tags(text)
+        self.title_tags = _tags(title)
         self.words = _significant_words(text)
         self.lowered = text.lower()
 
@@ -83,8 +92,14 @@ class Job:
             return 0, []
         own = _tags(text, extra_tags)
         matched = sorted(own & self.tags) + sorted(t for t in own - self.tags if t.islower() and t in self.lowered)
+        points = sum(TITLE_TAG_POINTS if t in self.title_tags else TAG_POINTS for t in matched)
         shared = len(_significant_words(text) & self.words)
-        return 10 * len(matched) + min(shared, 5), matched
+        return points + min(shared, 5), matched
+
+
+def entry_score(header_score: int, statement_scores: list[int]) -> int:
+    best = sorted(statement_scores, reverse=True)
+    return round(header_score / 2 + sum(w * s for w, s in zip(ENTRY_WEIGHTS, best)))
 
 
 def build_plan(conn: sqlite3.Connection, opportunity: dict | None,
@@ -129,7 +144,7 @@ def build_plan(conn: sqlite3.Connection, opportunity: dict | None,
             "experience_id": e["id"], "kind": e["kind"], "title": e["title"], "organization": e["organization"],
             "location": e["location"], "dates": format_dates(e), "protected": bool(e["protected"]),
             "sort_key": (e["is_current"], e["end_date"] or e["start_date"] or ""),
-            "score": header_score // 2 + sum(sorted((s["score"] for s in scored), reverse=True)[:3]),
+            "score": entry_score(header_score, [s["score"] for s in scored]),
             "matched": header_matched, "statements": scored,
         }
         entry["included"] = (entry["protected"] or e["kind"] in HEADER_ONLY_KINDS
@@ -148,7 +163,7 @@ def build_plan(conn: sqlite3.Connection, opportunity: dict | None,
         for x in entries:
             del x["sort_key"]
         sections.append({"kind": kind, "title": SECTION_TITLES[kind], "entries": entries,
-                         "score": sum(x["score"] for x in entries if x["included"])})
+                         "score": max((x["score"] for x in entries if x["included"]), default=0)})
     middle = sorted((s for s in sections if s["kind"] in MIDDLE_SECTIONS),
                     key=lambda s: (-s["score"], MIDDLE_SECTIONS.index(s["kind"])))
     ordered = [s for s in sections if s["kind"] == "education"] + middle
