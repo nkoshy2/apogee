@@ -70,3 +70,20 @@ content snapshot, the template name plus hash, and file hashes. Statements a res
 Fitting the page limit drops the lowest-scoring optional statements, never protected or user-forced ones,
 and never touches fonts or margins. Education/employment/research stay reverse-chronological; projects,
 leadership and awards are ordered by relevance.
+
+## D13: Discovery keeps student roles only, filtered at the source (2026-10-27)
+Boards list about 8,300 jobs, of which about 290 are internships or co-ops. Adapters keep only titles (or Lever
+labels) matching intern / internship / co-op / student. This keeps the feed small (about 1.9 MB per run)
+and the opportunity list relevant. Apprenticeships are excluded (they are technician roles).
+Completeness is defined against the filtered set, so a filter change can mark postings "not seen"
+but never deletes them.
+
+## D14: Feed published as a single force-pushed commit (2026-10-27)
+Committing every run would add about 100 MB a month to git history. Instead the workflow rebuilds a
+`discovery-feed` branch holding the last 14 days of runs (always at least 4) and force-pushes it as one
+commit. Local import verifies each run's SHA-256 from the index before using it.
+
+## D15: Sources are a file in the repo, not a UI setting (2026-10-27)
+The cloud job can only read what's in the repository, so `aims/discovery/sources.json` is the single
+source of truth for both cloud and local runs. Settings shows health per source. Editing the list is a
+one-line change to that file. Revisit if adding sources becomes frequent.

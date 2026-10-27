@@ -1,0 +1,55 @@
+# Scheduled discovery: checks the public job boards in aims/discovery/sources.json twice a day,
+# even while your computer is off, and publishes the result to the `discovery-feed` branch.
+# Apogee imports it the next time it opens (Settings -> Discovery -> cloud feed URL).
+#
+# Only public posting data is published. This job never sees the local database: the
+# discovery code it runs is standard-library only and cannot import it (tests enforce this).
+# The feed branch is force-pushed as a single commit holding the last 14 days of runs, so the
+# repository does not grow over time.
+name: Discovery
+
+on:
+  schedule:
+    - cron: "17 5,17 * * *"   # twice a day, off the hour
+  workflow_dispatch:           # "Run workflow" button for a manual run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check job boards
+        # Exits non-zero only if every source failed; partial failures are recorded in the feed.
+        run: python -m aims.discovery.run --out "$RUNNER_TEMP/run.json" --origin cloud
+
+      - name: Add run to the feed and prune old runs
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          if git fetch --quiet origin discovery-feed; then
+            git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/out"
+          fi
+          python -m aims.discovery.publish --run "$RUNNER_TEMP/run.json" --feed "$RUNNER_TEMP/out/feed/v1"
+
+      - name: Publish feed branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$RUNNER_TEMP/out"
+          git init --quiet --initial-branch discovery-feed
+          git add feed
+          git -c user.name="apogee-discovery" -c user.email="actions@users.noreply.github.com" \
+            commit --quiet -m "Discovery feed $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push --force --quiet "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" discovery-feed

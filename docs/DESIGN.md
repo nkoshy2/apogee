@@ -53,12 +53,13 @@ aims/
   experience.py      experiences, statements (draft/verified/approved), skills [Done]
   resume/            plan.py select+order, latex.py escape+render, build.py
                      compile+validate, service.py generate+store, template.tex [Done]
-  discovery/         adapters (greenhouse, lever), feed writer, importer [Planned P4]
+  discovery/         model, greenhouse, lever, run, publish (cloud-safe, stdlib only);
+                     importer (local), sources.json                    [Done]
   backup.py          create/verify/retain/restore                        [Planned P5]
   web/               FastAPI app, security middleware, static frontend   [Done]
   server.py          single-instance lock + uvicorn                      [Done]
 launcher.pyw         shortcut target: start-or-reuse server, open browser [Done]
-discovery_cloud/     entrypoint run by GitHub Actions (imports aims.discovery only) [Planned P4]
+.github/workflows/discovery.yml  twice-daily cloud run -> discovery-feed branch [Written, not yet pushed]
 ```
 
 Dependency rule: `web → (opportunities, ranking, applications, resume, backup, ...) → db`.
@@ -92,9 +93,15 @@ SQLite, WAL, `foreign_keys=ON`, `synchronous=FULL`. Timestamps are UTC ISO-8601 
 - `resume_statements(resume_id, statement_id FK RESTRICT, position)`, so statements a resume used can't be deleted.
 - `applications.resume_document_id` (which resume was sent). Attaching or detaching one is logged in the history.
 
+**0004 (Done)**
+
+- `sources(source, source_key UNIQUE, employer)`.
+- `source_checks(source_id, run_id, origin cloud|local|file, checked_at, status, complete, total_on_board, posting_count, new_count, error)`. Failures are recorded too: this table is the source-health history.
+- `imported_feed_runs(run_id PK, origin, generated_at, imported_at, summary_json)`.
+- `opportunity_snapshots(opportunity_id, fetched_at, content_sha256, data_json)`, written only when a posting's content changes.
+
 **Planned**
 
-- P4: `sources(id, kind, source_key, employer, enabled)`, `source_checks(id, source_id, feed_run_id, checked_at, status ok|failed, complete, posting_count, error)`, `imported_feed_runs(run_id PK, imported_at)`, `opportunity_snapshots(opportunity_id, fetched_at, content_sha256, raw_json)` (written only when the content hash changes; this is the audit trail).
 - P5: `meta(data_revision)` plus triggers.
 
 ## 5. Local HTTP API
@@ -118,32 +125,49 @@ All endpoints are under `/api`. JSON only. Mutations require the header `X-AIMS-
 | `POST /api/resumes` (generate; 422 with reasons and checks on failure, nothing saved) | Done |
 | `GET /api/resumes[?opportunity_id=]`, `GET /api/resumes/{id}`, `GET /api/resumes/{id}/pdf\|tex[?download=true]` | Done |
 | `POST /api/shutdown` | Done |
-| `/api/discovery/sources`, `/api/discovery/import`, `/api/discovery/health` | P4 |
+| `GET /api/discovery/health`, `POST /api/discovery/run` (check boards from here), `POST /api/discovery/sync` (import cloud runs), `POST /api/discovery/import` (feed file) | Done |
 | `/api/backups` (list/create/verify/restore) | P5 |
 
-## 6. Discovery feed (Phase 4)
+## 6. Discovery (Phase 4, Done; cloud schedule awaiting repo hosting)
 
-GitHub Actions (cron, roughly every 12 h) runs the adapters and commits `feed/v1/runs/<run_id>.json` plus `feed/v1/latest.json`, which points to recent runs.
+**Sources** (`aims/discovery/sources.json`, public): every board key was verified live on 2026-10-26, including the company name behind it. For example, `archer` is a veterinary clinic and `archer56` is Archer Aviation.
+- Greenhouse (13): SpaceX, Relativity, Anduril, Rocket Lab, Astranis, Varda, Muon, Ursa Major, Inversion, Vast, Archer, HawkEye 360, Planet.
+- Lever (3): Hermeus, Shield AI, Loft Orbital.
 
-```json
-{
-  "schema": "aims-feed", "version": 1,
-  "run_id": "2026-11-02T06-00-00Z", "generated_at": "...",
-  "checks": [
-    {"source": "greenhouse", "source_key": "<board>", "employer": "...",
-     "status": "ok|failed", "complete": true, "error": null, "fetched_at": "...",
-     "postings": [{"source_posting_id": "...", "title": "...", "url": "...",
-                   "location": "...", "description": "...", "updated_at": "...",
-                   "raw_sha256": "..."}]}
-  ]
-}
-```
+First live run: 16/16 sources complete, 287 student roles out of about 8,300 jobs, in about 6 s.
 
-- Endpoints: Greenhouse `boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true`, Lever `api.lever.co/v0/postings/{company}?mode=json`. Both are public and unauthenticated. Each board token is validated by the probe script first.
-- The local importer processes runs not listed in `imported_feed_runs`, oldest first, one transaction per run. Postings are upserted on `(source, source_key, source_posting_id)`, and only source columns are updated.
-- A posting goes to `not_seen` only if the check is `ok` **and** `complete`. It returns to `active` if seen again.
-- Manual adapter runs locally produce the same JSON, so there is a single import path.
-- Contents: only public posting data and the company list. Nothing from the local DB is uploaded.
+**Not automatable (feasibility probe):**
+- Blue Origin's Lever board is empty. Like Boeing, Lockheed Martin, Northrop and GE Aerospace, it uses Workday or Taleo, which have no official public API. These are added manually.
+- USAJOBS has an official API but needs a free personal API key (account registration), so it is deferred until wanted.
+- NASA OSTEM internships have no API.
+
+**Adapters** (standard library only):
+- **Greenhouse:** list `/v1/boards/{key}/jobs`. The check is complete only if the returned count equals `meta.total`. Student roles are then read one by one from `/jobs/{id}` (four in parallel). A failed detail read makes the check partial, not failed.
+- **Lever:** `/v0/postings/{key}?mode=json` returns everything in one response.
+- **Student-role filter:** intern / internship / co-op / student, matched in the title or in Lever's commitment/team labels. Apprenticeships are excluded.
+- **Untrusted content:** HTML is converted to text. URLs must be http(s).
+- **Network limits:** each request has a size cap and a total time budget, and 5xx errors and timeouts are retried twice.
+
+**Feed** (`schema: aims-feed`, version 1): `{run_id, origin, generated_at, checks: [{source, source_key, employer, status ok|failed, complete, error, fetched_at, total_on_board, postings: [...]}]}`.
+- Each posting carries `source_api_url` and `raw_sha256` as its audit reference.
+- `publish.py` keeps `latest.json` (an index with per-run SHA-256) plus `runs/<run_id>.json`. It prunes runs older than 14 days but always keeps the newest 4.
+- The GitHub workflow force-pushes the feed as a single commit to a `discovery-feed` branch, so the repo never grows (about 1.9 MB per run).
+
+**Import** (`importer.py`, local):
+- Validated in full or rejected (pydantic). Each run is imported once, in one transaction.
+- Upserted on `(source, source_key, source_posting_id)`. A matching manual entry (same normalized URL) is adopted rather than duplicated.
+- Only source columns are written. A deadline the source stops stating is kept.
+- `not_seen` is set only after an ok **and** complete check, and only for postings last seen before that check. A posting that reappears goes back to `active`. User-closed listings stay closed, and an older run never overwrites newer data.
+- A snapshot is stored only when the content hash changes.
+
+**Getting feeds:**
+- Remote sync downloads unimported runs oldest first and verifies each SHA-256. A bad run is skipped and the others still import.
+- Remote sync runs once per browser session when Apogee opens, or on demand.
+- Other routes: "Run discovery here", or importing a feed file.
+
+**Health:** per source: ok, partial, failing, stale (no complete check in 3 days), or never checked. It shows the last error, open and not-seen counts, and the time of the last cloud run.
+
+**Privacy:** the cloud-run modules (`run.py`, `publish.py`, adapters) import only the standard library. A test fails if they ever import the database, settings, `sqlite3`, `pydantic` or `fastapi`. The feed contains only posting fields.
 
 ## 7. Ranking (Phase 2, Done)
 
@@ -197,9 +221,9 @@ Excluded: logs, lock files, temp files, any tokens. Retention: delete backups ol
 |---|---|
 | Python 3.14 + FastAPI/uvicorn/pydantic | Validated |
 | MiKTeX `pdflatex` | Validated (MiKTeX 25.12). `latexmk` not used (D10) |
-| Greenhouse / Lever public APIs for the pilot employers | Validate in P4 with the probe script |
-| Non-Greenhouse/Lever priority employer, gov/research source | Feasibility probe only. Not blocking |
-| GitHub Actions schedule + repo visibility | User decision in P4 (R3) |
+| Greenhouse / Lever public APIs for the pilot employers | Validated 2026-10-26: 16 boards, all complete |
+| Non-Greenhouse/Lever priority employer, gov/research source | Probed: Workday/Taleo (Blue Origin, Boeing, ...) have no official API, so they stay manual. USAJOBS needs a free API key, so it is deferred |
+| GitHub Actions schedule + repo visibility | Workflow written. **Waiting on the user**: push to a GitHub repo (public recommended, R3) |
 | `pypdf` | Validated, pinned 6.21.2 |
 
 ## 11. Testing approach
@@ -245,7 +269,7 @@ Each task leaves the app working and tested.
 7. Document storage plus preview/export
 8. Resume Studio UI
 
-**Phase 4: Automated discovery**
+**Phase 4: Automated discovery (Done, except enabling the cloud schedule)**
 1. Probe script plus pilot list
 2. Canonical model
 3. Greenhouse adapter

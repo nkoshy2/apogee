@@ -6,6 +6,7 @@ No `from __future__ import annotations` here: FastAPI must resolve the locally
 defined `Conn` dependency annotation at definition time.
 """
 
+import json
 import sqlite3
 from pathlib import Path
 from typing import Annotated, Iterator, Literal
@@ -17,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from aims import APP_ID, __version__, applications, db, experience, opportunities, settings_store, summary
 from aims.config import Config
+from aims.discovery import importer
 from aims.resume import service as resume_service
 from aims.web import security
 
@@ -26,6 +28,10 @@ STATIC_DIR = Path(__file__).parent / "static"
 class ImportIn(BaseModel):
     format: Literal["csv", "json"]
     content: str = Field(max_length=5_000_000)
+
+
+class FeedUpload(BaseModel):
+    content: str = Field(max_length=60_000_000)
 
 
 class ResumeRequest(BaseModel):
@@ -261,6 +267,38 @@ def create_app(config: Config) -> FastAPI:
         media = "application/pdf" if kind == "pdf" else "text/plain; charset=utf-8"
         disposition = "attachment" if download or kind == "tex" else "inline"
         return FileResponse(path, media_type=media, filename=name, content_disposition_type=disposition)
+
+    # ---- discovery
+
+    @app.get("/api/discovery/health")
+    def discovery_health(conn: Conn):
+        return importer.health(conn)
+
+    @app.post("/api/discovery/run")
+    def discovery_run(conn: Conn):
+        """Check every source from this computer now (takes a few seconds to a minute)."""
+        try:
+            return importer.run_here(conn)
+        except importer.FeedError as exc:
+            raise HTTPException(422, str(exc))
+
+    @app.post("/api/discovery/sync")
+    def discovery_sync(conn: Conn):
+        """Import any cloud runs not yet imported (called when Apogee opens)."""
+        url = settings_store.load(conn).discovery_feed_url
+        if not url:
+            raise HTTPException(409, "No cloud feed is set up. Add its URL in Settings → Discovery.")
+        try:
+            return importer.sync_remote(conn, url)
+        except importer.FeedError as exc:
+            raise HTTPException(502, str(exc))
+
+    @app.post("/api/discovery/import")
+    def discovery_import(body: FeedUpload, conn: Conn):
+        try:
+            return importer.import_feed(conn, json.loads(body.content), origin="file")
+        except ValueError as exc:  # includes FeedError and JSON errors
+            raise HTTPException(422, str(exc))
 
     # ---- server
 

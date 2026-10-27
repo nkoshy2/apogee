@@ -323,3 +323,19 @@ details { margin: 10px 0; }
 summary { cursor: pointer; font-weight: 600; color: var(--color-accent-700); }
 iframe.pdf-preview { display: block; width: 100%; height: 760px; margin-top: 14px; border: 0; border-radius: 20px; background: #fff; box-shadow: var(--shadow-sm); }
 .form-actions { margin-top: 20px; }
+
+/* ---------------------------------------------------------------- discovery */
+
+.notice { padding: 10px 14px; border-radius: 18px; background: var(--color-ochre-100); color: var(--color-ochre-800); font-size: 14px; }
+.attention-text { color: var(--color-ochre-800); }
+.small-lede { font-size: 16px; margin: 6px 0 14px; }
+#disc-table tbody tr { cursor: default; }
+td .tag + .tag, td .status + .tag { margin-left: 6px; }
+code { font-size: 13px; padding: 1px 6px; border-radius: 6px; background: var(--color-bg); }
+label.file-button {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; margin: 0; border-radius: 999px; cursor: pointer;
+  font-size: 14px; font-weight: 600; color: var(--color-text); background: var(--color-neutral-100); border: 1px solid var(--color-neutral-500);
+}
+label.file-button:hover { background: var(--color-neutral-200); }
+label.file-button:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+label.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }

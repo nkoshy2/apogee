@@ -328,10 +328,27 @@
             <label>Engineering disciplines <textarea name="disciplines" rows="3" placeholder="Aerospace&#10;Mechanical"></textarea></label>
             <label>Internship terms <textarea name="internship_terms" rows="2" placeholder="Summer 2027"></textarea></label>
             <label>Backup mirror folder (optional) <input name="backup_mirror_dir" maxlength="500" placeholder="e.g. D:\Apogee-backups"></label>
+            <label>Cloud discovery feed URL (optional) <input name="discovery_feed_url" maxlength="500" placeholder="https://raw.githubusercontent.com/you/apogee-feed/discovery-feed/feed/v1"></label>
           </div>
         </div>
         <p class="form-actions"><button type="submit" class="tall">Save settings</button></p>
       </form>
+      <div class="panel" id="discovery-panel">
+        <div class="row spread wrap">
+          <h2>Discovery</h2>
+          <div class="row wrap">
+            <button type="button" id="disc-run">Run discovery here</button>
+            <button type="button" id="disc-sync" class="secondary">Check cloud feed</button>
+            <label class="file-button secondary-like">Import feed file<input id="disc-file" type="file" accept=".json,application/json"></label>
+          </div>
+        </div>
+        <p class="lede small-lede" id="disc-lede"></p>
+        <table id="disc-table">
+          <thead><tr><th>Employer</th><th>Health</th><th>Last checked</th><th>Postings</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="meta">Apogee reads only public job boards and keeps student roles (internships and co-ops). A source that fails or returns a partial list never closes anything: postings are marked "not seen" only after a complete, successful check. To add or pause a source, edit <code>aims/discovery/sources.json</code>.</p>
+      </div>
       <div class="panel tinted">
         <h2>System</h2>
         <dl id="health"></dl>

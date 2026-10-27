@@ -61,6 +61,9 @@ class Settings(BaseModel):
     disciplines: ItemList = []
     internship_terms: ItemList = []
     backup_mirror_dir: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] = ""
+    # Where the cloud discovery feed is published (folder holding latest.json). Empty: local runs only.
+    discovery_feed_url: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500,
+                                                         pattern=r"^(|https://\S+|http://(127\.0\.0\.1|localhost)(:\d+)?/\S*)$")] = ""
     profile: Profile = Profile()
     resume_header: ResumeHeader = ResumeHeader()
 

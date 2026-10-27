@@ -1,0 +1,22 @@
+{
+  "_comment": "Public discovery sources. Read by the cloud runner and by 'Run discovery here'. Only public board identifiers belong here, never private data. Every key was verified against the live board (docs/DESIGN.md section 6). Set enabled=false to pause a source without losing its history.",
+  "version": 1,
+  "sources": [
+    {"source": "greenhouse", "key": "spacex", "employer": "SpaceX", "enabled": true},
+    {"source": "greenhouse", "key": "relativity", "employer": "Relativity Space", "enabled": true},
+    {"source": "greenhouse", "key": "andurilindustries", "employer": "Anduril Industries", "enabled": true},
+    {"source": "greenhouse", "key": "rocketlab", "employer": "Rocket Lab", "enabled": true},
+    {"source": "greenhouse", "key": "astranis", "employer": "Astranis", "enabled": true},
+    {"source": "greenhouse", "key": "vardaspace", "employer": "Varda Space Industries", "enabled": true},
+    {"source": "greenhouse", "key": "muonspace", "employer": "Muon Space", "enabled": true},
+    {"source": "greenhouse", "key": "ursamajor", "employer": "Ursa Major", "enabled": true},
+    {"source": "greenhouse", "key": "inversionspace", "employer": "Inversion Space", "enabled": true},
+    {"source": "greenhouse", "key": "vast", "employer": "Vast", "enabled": true},
+    {"source": "greenhouse", "key": "archer56", "employer": "Archer Aviation", "enabled": true},
+    {"source": "greenhouse", "key": "hawkeye360", "employer": "HawkEye 360", "enabled": true},
+    {"source": "greenhouse", "key": "planetlabs", "employer": "Planet", "enabled": true},
+    {"source": "lever", "key": "hermeus", "employer": "Hermeus", "enabled": true},
+    {"source": "lever", "key": "shieldai", "employer": "Shield AI", "enabled": true},
+    {"source": "lever", "key": "loftorbital", "employer": "Loft Orbital", "enabled": true}
+  ]
+}

@@ -197,9 +197,12 @@ function oppRow(o) {
     onclick: (ev) => ev.stopPropagation(),
     onchange: (ev) => toggleCompare(o.id, ev.target),
   });
-  const status = o.application_status
-    ? h("span", { class: `status status-${o.application_status}` }, cap(o.application_status))
-    : h("span", { class: o.user_state === "saved" ? "tag ok" : "tag" }, cap(o.user_state));
+  const status = [
+    o.application_status
+      ? h("span", { class: `status status-${o.application_status}` }, cap(o.application_status))
+      : h("span", { class: o.user_state === "saved" ? "tag ok" : "tag" }, cap(o.user_state)),
+    o.listing_status === "not_seen" ? h("span", { class: "tag attention", title: "Missing from the employer's latest complete listing" }, "Not seen") : null,
+  ];
   return h("tr", { class: [o.id === state.detailId ? "selected" : "", o.user_state === "dismissed" ? "dim" : ""].join(" "),
                    onclick: (ev) => { if (ev.target.tagName !== "A" && ev.target.tagName !== "INPUT") showDetail(o.id); } },
     h("td", {}, check),
@@ -286,7 +289,11 @@ async function showDetail(id) {
     h("p", {}, h("strong", {}, o.employer), o.location ? ` · ${o.location}` : "", ` · ${o.opportunity_type}`,
       o.deadline ? ` · deadline ${o.deadline}` : ""),
     h("p", { class: "muted small" },
-      `Source: ${o.source} · first seen ${fmtDate(o.first_seen_at)} · last verified ${fmtDate(o.last_seen_at)} · listing ${o.listing_status} · ${s}`),
+      o.source === "manual" ? `Added by you on ${fmtDate(o.first_seen_at)} · ${s}`
+        : `From ${cap(o.source)} (${o.source_key}) · first seen ${fmtDate(o.first_seen_at)} · last seen on the board ${fmtDate(o.last_seen_at)} · ${s}`),
+    o.listing_status === "not_seen"
+      ? h("p", { class: "notice" }, `Not in ${o.employer}'s complete listing since ${fmtDate(o.missing_since)}. It may have closed or been renamed; check the posting before applying. Nothing has been deleted.`)
+      : null,
     actions,
     rankingSection(o.ranking),
     h("h4", {}, "Notes"), notes,
@@ -931,6 +938,113 @@ async function showDocument(id) {
   }
 }
 
+// ---------------------------------------------------------------- discovery
+
+const HEALTH_TAG = { ok: ["tag ok", "Healthy"], partial: ["tag attention", "Partial list"], stale: ["tag attention", "Stale"],
+                     failing: ["tag critical", "Failing"], "never checked": ["tag", "Not checked yet"] };
+
+function ago(iso) {
+  if (!iso) return "never";
+  const mins = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (mins < 2) return "just now";
+  if (mins < 120) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  return hours < 48 ? `${hours} h ago` : `${Math.round(hours / 24)} days ago`;
+}
+
+async function loadDiscovery() {
+  try {
+    const [hl, s] = await Promise.all([api("GET", "/api/discovery/health"), api("GET", "/api/settings")]);
+    document.getElementById("disc-sync").disabled = !s.discovery_feed_url;
+    const counts = {};
+    for (const src of hl.sources) counts[src.state] = (counts[src.state] || 0) + 1;
+    const trouble = (counts.failing || 0) + (counts.partial || 0) + (counts.stale || 0);
+    fill(document.getElementById("disc-lede"),
+      `${plural(hl.sources.length, "source", "sources")}: `,
+      `${counts.ok || 0} healthy`, trouble ? [", ", h("strong", { class: "attention-text" }, `${trouble} need attention`)] : "",
+      counts["never checked"] ? `, ${counts["never checked"]} not checked yet` : "", ". ",
+      s.discovery_feed_url ? `Last cloud run: ${ago(hl.last_cloud_run_at)}.` : "No cloud feed set up yet, so discovery runs only when you click Run discovery here.");
+    document.querySelector("#disc-table tbody").replaceChildren(...hl.sources.map((src) => {
+      const [cls, label] = HEALTH_TAG[src.state];
+      return h("tr", {},
+        h("td", {}, h("strong", {}, src.employer), h("span", { class: "sub" }, `${src.source} · ${src.source_key}${src.configured ? "" : " · removed from sources.json"}`)),
+        h("td", {}, h("span", { class: cls }, label),
+          src.last_error ? h("span", { class: "sub", title: src.last_error }, src.last_error.slice(0, 90)) : null),
+        h("td", { class: "deadline" }, ago(src.last_checked_at)),
+        h("td", {}, `${src.active} open`, src.not_seen ? h("span", { class: "sub" }, `${src.not_seen} not seen`) : null));
+    }));
+  } catch (err) {
+    banner(err.message);
+  }
+}
+
+function describeImport(r) {
+  const parts = [`${plural(r.new, "new opportunity", "new opportunities")}`];
+  if (r.updated) parts.push(`${r.updated} updated`);
+  if (r.not_seen) parts.push(`${r.not_seen} no longer listed`);
+  if (r.failed_checks) parts.push(`${plural(r.failed_checks, "source", "sources")} failed`);
+  return parts.join(", ") + ".";
+}
+
+async function busy(button, label, work) {
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = label;
+  try { return await work(); } finally { button.disabled = false; button.textContent = original; }
+}
+
+async function runDiscovery() {
+  await busy(document.getElementById("disc-run"), "Checking boards…", async () => {
+    try {
+      const r = await api("POST", "/api/discovery/run");
+      banner(`Discovery finished: ${describeImport(r)}`, r.failed_checks ? "error" : "ok");
+    } catch (err) {
+      banner(err.message);
+    }
+    loadDiscovery();
+    loadSummary();
+  });
+}
+
+async function syncCloud(quiet) {
+  try {
+    const r = await api("POST", "/api/discovery/sync");
+    if (r.errors.length) banner(`Cloud feed: ${r.errors.length} run(s) could not be imported. ${r.errors[0]}`);
+    else if (r.new || !quiet) banner(`Cloud feed: ${plural(r.imported.length, "run", "runs")} imported, ${plural(r.new, "new opportunity", "new opportunities")}.`, "ok");
+    loadSummary();
+    if (location.hash === "#opportunities" || !location.hash) loadOpportunities();
+  } catch (err) {
+    if (!quiet || err.status !== 409) banner(err.message);
+  }
+  if (!quiet) loadDiscovery();
+}
+
+async function importFeedFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const r = await api("POST", "/api/discovery/import", { content: await file.text() });
+    banner(r.skipped ? "That feed run was already imported." : `Feed imported: ${describeImport(r)}`, "ok");
+    loadDiscovery();
+    loadSummary();
+  } catch (err) {
+    banner(err.message);
+  } finally {
+    ev.target.value = "";
+  }
+}
+
+// When Apogee opens, pick up anything the cloud found while this computer was off (once per browser session).
+async function syncOnOpen() {
+  try {
+    if (sessionStorage.getItem("apogee-synced")) return;
+    sessionStorage.setItem("apogee-synced", "1");
+  } catch { /* storage unavailable: sync anyway */ }
+  try {
+    if ((await api("GET", "/api/settings")).discovery_feed_url) syncCloud(true);
+  } catch { /* the page's own requests report connection problems */ }
+}
+
 // ---------------------------------------------------------------- settings
 
 function setupSettingsForm() {
@@ -947,6 +1061,8 @@ async function loadSettings() {
     const form = document.getElementById("settings-form");
     for (const f of LIST_FIELDS) form.elements[f].value = s[f].join("\n");
     form.elements.backup_mirror_dir.value = s.backup_mirror_dir;
+    form.elements.discovery_feed_url.value = s.discovery_feed_url;
+    loadDiscovery();
     const p = s.profile;
     for (const f of TRISTATE_FIELDS) form.elements[f].value = p[f] === null ? "" : String(p[f]);
     form.elements.degree_level.value = p.degree_level || "";
@@ -966,7 +1082,8 @@ async function submitSettings(ev) {
   const form = ev.target;
   const lines = (name) => form.elements[name].value.split("\n").map((x) => x.trim()).filter(Boolean);
   const tri = (name) => (form.elements[name].value === "" ? null : form.elements[name].value === "true");
-  const body = { backup_mirror_dir: form.elements.backup_mirror_dir.value, profile: {
+  const body = { backup_mirror_dir: form.elements.backup_mirror_dir.value,
+    discovery_feed_url: form.elements.discovery_feed_url.value.trim(), profile: {
     us_citizen: tri("us_citizen"), us_person: tri("us_person"), needs_sponsorship: tri("needs_sponsorship"),
     degree_level: form.elements.degree_level.value || null,
     graduation: form.elements.graduation.value || null,
@@ -1022,8 +1139,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("rs-skill-form").addEventListener("submit", submitSkill);
   document.getElementById("rs-header-form").addEventListener("submit", submitHeader);
   for (const a of document.querySelectorAll("[data-open-sub]")) a.addEventListener("click", () => { rs.sub = a.dataset.openSub; });
+  document.getElementById("disc-run").addEventListener("click", runDiscovery);
+  document.getElementById("disc-sync").addEventListener("click", () => syncCloud(false));
+  document.getElementById("disc-file").addEventListener("change", importFeedFile);
   setupSettingsForm();
   document.getElementById("settings-form").addEventListener("submit", submitSettings);
   document.getElementById("shutdown").addEventListener("click", shutdown);
   showTab();
+  syncOnOpen();
 });
