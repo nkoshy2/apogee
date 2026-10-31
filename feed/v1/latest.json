@@ -1,0 +1,67 @@
+{
+ "schema": "aims-feed-index",
+ "version": 1,
+ "updated_at": "2026-10-31T10:58:10Z",
+ "runs": [
+  {
+   "run_id": "20261027T010517Z-403d87",
+   "file": "runs/20261027T010517Z-403d87.json",
+   "generated_at": "2026-10-27T01:05:17Z",
+   "sha256": "35c8cb26ac3406ea16d18408e55813f904b3ec8d6eb34bd216427af3bc31f5a3"
+  },
+  {
+   "run_id": "20261027T104048Z-5b34d7",
+   "file": "runs/20261027T104048Z-5b34d7.json",
+   "generated_at": "2026-10-27T10:40:48Z",
+   "sha256": "4951c64845ad8da94647488377699fe5e5a0f33be1a699bacc0c3992d590b3f6"
+  },
+  {
+   "run_id": "20261027T212312Z-590f39",
+   "file": "runs/20261027T212312Z-590f39.json",
+   "generated_at": "2026-10-27T21:23:12Z",
+   "sha256": "7a85014558046842f6b8bdc600c288bad76522aadddcdd802929e36995c03ffe"
+  },
+  {
+   "run_id": "20261028T112452Z-db31e1",
+   "file": "runs/20261028T112452Z-db31e1.json",
+   "generated_at": "2026-10-28T11:24:52Z",
+   "sha256": "53b250614d0343d82c1cf8d9feeadcf542dbad6f4fb229b64f6b0439a8c5782c"
+  },
+  {
+   "run_id": "20261028T214312Z-df92f0",
+   "file": "runs/20261028T214312Z-df92f0.json",
+   "generated_at": "2026-10-28T21:43:12Z",
+   "sha256": "02bafd0c35377112bf2495c8b876bfbb4e5840bcbb86b471ee823767a3fa1470"
+  },
+  {
+   "run_id": "20261029T113529Z-3df22e",
+   "file": "runs/20261029T113529Z-3df22e.json",
+   "generated_at": "2026-10-29T11:35:29Z",
+   "sha256": "f2f69353f284881a45baef7de1977ee4ba5d42df057dcc0fbe33cbbd84f440ee"
+  },
+  {
+   "run_id": "20261029T215223Z-31e9f8",
+   "file": "runs/20261029T215223Z-31e9f8.json",
+   "generated_at": "2026-10-29T21:52:23Z",
+   "sha256": "ddb77de67f9e74ac3c710fa6b5845d7214dcf2b588782079eb6a094c5f8f4528"
+  },
+  {
+   "run_id": "20261030T112731Z-18cc3f",
+   "file": "runs/20261030T112731Z-18cc3f.json",
+   "generated_at": "2026-10-30T11:27:31Z",
+   "sha256": "b0b4aa607cba3aef86b277bd06a41f209733a36ce5f5a526720425bd5cc3761a"
+  },
+  {
+   "run_id": "20261030T213408Z-cba2a8",
+   "file": "runs/20261030T213408Z-cba2a8.json",
+   "generated_at": "2026-10-30T21:34:08Z",
+   "sha256": "a3fd59cdc89103cbd12c94436ab33f87d2d44eeb5dad8f0b82e0bff5b85a8de5"
+  },
+  {
+   "run_id": "20261031T105809Z-ca97c9",
+   "file": "runs/20261031T105809Z-ca97c9.json",
+   "generated_at": "2026-10-31T10:58:09Z",
+   "sha256": "ce98587fbd126a29ff96db530bcd54b43da8f64f5ec9eea95de76cc7bd34115b"
+  }
+ ]
+}
