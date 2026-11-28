@@ -1,0 +1,175 @@
+{
+ "schema": "aims-feed-index",
+ "version": 1,
+ "updated_at": "2026-11-28T14:18:54Z",
+ "runs": [
+  {
+   "run_id": "20261114T213354Z-240df2",
+   "file": "runs/20261114T213354Z-240df2.json",
+   "generated_at": "2026-11-14T21:33:54Z",
+   "sha256": "e8da1dd90fcb1849fc52248cd584765ebba7adc570dd84785c0c9edb5f1c4590"
+  },
+  {
+   "run_id": "20261115T124916Z-d2d21e",
+   "file": "runs/20261115T124916Z-d2d21e.json",
+   "generated_at": "2026-11-15T12:49:16Z",
+   "sha256": "5149ef5ed7b90d86accfaab385f36bc2cb30f9af4d46180cf6fe1afd7c573c2b"
+  },
+  {
+   "run_id": "20261115T215243Z-368623",
+   "file": "runs/20261115T215243Z-368623.json",
+   "generated_at": "2026-11-15T21:52:43Z",
+   "sha256": "b9844d18d3607c2a6563ca9de44a65d72ab8fb2fb563a5937c1a60d01fe91233"
+  },
+  {
+   "run_id": "20261116T134547Z-26d54c",
+   "file": "runs/20261116T134547Z-26d54c.json",
+   "generated_at": "2026-11-16T13:45:47Z",
+   "sha256": "a3c6903cd0f7b696cddf88f1d37f00def97f0cc0ec664563dac0e10003675895"
+  },
+  {
+   "run_id": "20261117T005132Z-bc52c8",
+   "file": "runs/20261117T005132Z-bc52c8.json",
+   "generated_at": "2026-11-17T00:51:32Z",
+   "sha256": "1a272b91e205003d9024e07f1d8aab28e167bb55a9943276d75d7db00288ddc8"
+  },
+  {
+   "run_id": "20261117T143640Z-6928a5",
+   "file": "runs/20261117T143640Z-6928a5.json",
+   "generated_at": "2026-11-17T14:36:40Z",
+   "sha256": "b591ff0b75c16f12a1a564f42ae5a29acf85cdbb536520ba18bcab9ee33c51a4"
+  },
+  {
+   "run_id": "20261117T235233Z-e99666",
+   "file": "runs/20261117T235233Z-e99666.json",
+   "generated_at": "2026-11-17T23:52:33Z",
+   "sha256": "7c980356f1ebc221b140685910e438f8428eae40a0e4bdf4d40e52ba094c79c9"
+  },
+  {
+   "run_id": "20261118T141255Z-ad6d54",
+   "file": "runs/20261118T141255Z-ad6d54.json",
+   "generated_at": "2026-11-18T14:12:55Z",
+   "sha256": "4318fa69ce7446c9112709dcba34e0dd89072d49a7b0f66d92457bb70301c0c4"
+  },
+  {
+   "run_id": "20261118T232516Z-821018",
+   "file": "runs/20261118T232516Z-821018.json",
+   "generated_at": "2026-11-18T23:25:16Z",
+   "sha256": "fdf6a2754171205ba23964d22fe97cb342b662ed3f90c65b72007867d12fd73a"
+  },
+  {
+   "run_id": "20261119T143023Z-47c01a",
+   "file": "runs/20261119T143023Z-47c01a.json",
+   "generated_at": "2026-11-19T14:30:23Z",
+   "sha256": "326366ea4e90da1ad31b0bba00d617d6cd80f64b449c7232c8cbefc749c608ab"
+  },
+  {
+   "run_id": "20261119T233758Z-c124f7",
+   "file": "runs/20261119T233758Z-c124f7.json",
+   "generated_at": "2026-11-19T23:37:58Z",
+   "sha256": "55b37047f6d2dc5a8fcd69adbd73912820c5f39f543174e2f1e1838b303298e2"
+  },
+  {
+   "run_id": "20261120T140754Z-9b0c22",
+   "file": "runs/20261120T140754Z-9b0c22.json",
+   "generated_at": "2026-11-20T14:07:54Z",
+   "sha256": "3883b8cc7ba83aea4cd8583117dcb519ded94e5123007febc2b67e4a17f13f34"
+  },
+  {
+   "run_id": "20261120T230921Z-6a7176",
+   "file": "runs/20261120T230921Z-6a7176.json",
+   "generated_at": "2026-11-20T23:09:21Z",
+   "sha256": "6f8277479e586017df6a76522c22ce68e728a259f403264964e5a4436eb9a55e"
+  },
+  {
+   "run_id": "20261121T133309Z-40d7af",
+   "file": "runs/20261121T133309Z-40d7af.json",
+   "generated_at": "2026-11-21T13:33:09Z",
+   "sha256": "5fdf877c0e96ca1d7361316701f865d3e638744c590d2b4a94df476f2348aaba"
+  },
+  {
+   "run_id": "20261121T221305Z-e53306",
+   "file": "runs/20261121T221305Z-e53306.json",
+   "generated_at": "2026-11-21T22:13:05Z",
+   "sha256": "159a680cbf5a48fa4eea29e2f5064c1b559b02b90b8e603d2e345f11b8f94cb4"
+  },
+  {
+   "run_id": "20261122T132629Z-dddf4c",
+   "file": "runs/20261122T132629Z-dddf4c.json",
+   "generated_at": "2026-11-22T13:26:29Z",
+   "sha256": "2af72b2d3e85bfacc2983a65f1a22ba379abe7b97553992c916021caac1dc897"
+  },
+  {
+   "run_id": "20261122T223031Z-ed2014",
+   "file": "runs/20261122T223031Z-ed2014.json",
+   "generated_at": "2026-11-22T22:30:31Z",
+   "sha256": "f94814bd6b814c4f28f422fdf7d80914a201e12bf1fb083890c2afaa59ed76be"
+  },
+  {
+   "run_id": "20261123T160751Z-130de6",
+   "file": "runs/20261123T160751Z-130de6.json",
+   "generated_at": "2026-11-23T16:07:51Z",
+   "sha256": "47d8881db897f09b8a2b5cb93fdc254a2b1409ffe70679965421a7d4a1789a02"
+  },
+  {
+   "run_id": "20261124T032156Z-5f4bca",
+   "file": "runs/20261124T032156Z-5f4bca.json",
+   "generated_at": "2026-11-24T03:21:56Z",
+   "sha256": "99233e0e4959e2bb1fd8dba4c0f2f76dcafb6d01e48b5984d3fc3ec5e89cdc6b"
+  },
+  {
+   "run_id": "20261124T155821Z-9fbb9e",
+   "file": "runs/20261124T155821Z-9fbb9e.json",
+   "generated_at": "2026-11-24T15:58:21Z",
+   "sha256": "5cb09f0a72030697aa64cfb4c59a0be74eae4f3ea8eaa02518e3111931823376"
+  },
+  {
+   "run_id": "20261125T012717Z-90c2d4",
+   "file": "runs/20261125T012717Z-90c2d4.json",
+   "generated_at": "2026-11-25T01:27:17Z",
+   "sha256": "4626113be544bb456858810b95adfc8c718713eeebec3ed073949b06582f9bc8"
+  },
+  {
+   "run_id": "20261125T154450Z-cc1d73",
+   "file": "runs/20261125T154450Z-cc1d73.json",
+   "generated_at": "2026-11-25T15:44:50Z",
+   "sha256": "405424753444f944e1853a0842189e73a90aadd231476e4a4de2ef7c2aabfd04"
+  },
+  {
+   "run_id": "20261126T010115Z-445179",
+   "file": "runs/20261126T010115Z-445179.json",
+   "generated_at": "2026-11-26T01:01:15Z",
+   "sha256": "975236fa3ef36793db8a365c8f5771055b7a0a47579e2ef0adbe5d11f07ed65f"
+  },
+  {
+   "run_id": "20261126T152552Z-d239bd",
+   "file": "runs/20261126T152552Z-d239bd.json",
+   "generated_at": "2026-11-26T15:25:52Z",
+   "sha256": "dc66210cb0ef9360ba4f66a6fb3878756f2a70ed49f656461b2a1591917bb7ec"
+  },
+  {
+   "run_id": "20261127T010215Z-50a2bc",
+   "file": "runs/20261127T010215Z-50a2bc.json",
+   "generated_at": "2026-11-27T01:02:15Z",
+   "sha256": "676acd093a5cbba5e4e62ca15038fc570e5fdc6b974e8ce3b204d50914a7b928"
+  },
+  {
+   "run_id": "20261127T151343Z-82d619",
+   "file": "runs/20261127T151343Z-82d619.json",
+   "generated_at": "2026-11-27T15:13:43Z",
+   "sha256": "ae9d83c01c98d3aaf08f47d62f0c4e6a5e3d1c4fce1cb7136b8bb9b4b6c57380"
+  },
+  {
+   "run_id": "20261128T003450Z-ed4765",
+   "file": "runs/20261128T003450Z-ed4765.json",
+   "generated_at": "2026-11-28T00:34:50Z",
+   "sha256": "59b2d22a7a4340091fc92392982f2a7a6b30299901ffa4c49edab04c9df40141"
+  },
+  {
+   "run_id": "20261128T141853Z-e6fac1",
+   "file": "runs/20261128T141853Z-e6fac1.json",
+   "generated_at": "2026-11-28T14:18:53Z",
+   "sha256": "e7b2fb5e193d48ad7d092b4be15849dd1847e441c31ea1a8189109c511527391"
+  }
+ ]
+}
